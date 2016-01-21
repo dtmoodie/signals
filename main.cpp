@@ -142,10 +142,10 @@ public:
         std::cout << arg1 << " ";
         Serializer<Ts...>::serialize(args...);
     }
-    static void serialize(std::stringstream& ss, T1 arg1, Ts... args)
+    static void serialize_ss(std::stringstream& ss, T1 arg1, Ts... args)
     {
         ss << arg1 << ", ";
-        Serializer<Ts...>::serialize(ss, args...);
+        Serializer<Ts...>::serialize_ss(ss, args...);
     }
     static void deserialize(std::stringstream& ss, T1& arg1, Ts&... args)
     {
