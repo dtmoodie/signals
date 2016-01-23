@@ -1,6 +1,6 @@
 #include "inter_thread.h"
 
-using namespace signals;
+using namespace Signals;
 void thread_specific_queue::push(const std::function<void(void)>& f, boost::thread::id id)
 {
     thread_queues[id].push(f);

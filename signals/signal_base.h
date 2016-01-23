@@ -3,7 +3,7 @@
 #include "LokiTypeInfo.h"
 #include <memory>
 
-namespace signals
+namespace Signals
 {
     class signal_sink_base;
     class connection;

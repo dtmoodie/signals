@@ -1,7 +1,7 @@
 #pragma once
 #include "Defs.h"
 
-namespace signals
+namespace Signals
 {
     class signal_base;
     class SIGNAL_EXPORTS connection
@@ -12,4 +12,4 @@ namespace signals
         connection(int index, signal_base* parent);
         ~connection();
     };
-} // namespace signals
+} // namespace Signals

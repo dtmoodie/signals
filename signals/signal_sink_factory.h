@@ -5,7 +5,7 @@
 #include "LokiTypeInfo.h"
 #include "Defs.h"
 
-namespace signals
+namespace Signals
 {
     class SIGNAL_EXPORTS signal_sink_base;
 

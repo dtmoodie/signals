@@ -1,5 +1,5 @@
 #include "signal_manager.h"
-using namespace signals;
+using namespace Signals;
 
 signal_manager::signal_manager()
 {
@@ -13,20 +13,20 @@ signal_manager* signal_manager::instance()
     }
     return inst;
 }
-void signal_manager::register_thread(thread_type type, boost::thread::id id)
+void signal_manager::register_thread(int type, boost::thread::id id)
 {
     std::lock_guard<std::mutex> lock(mtx);
-    auto& threads = thread_map[type];
+    auto& threads = _thread_map[type];
     if (std::count(threads.begin(), threads.end(), id) == 0)
         threads.push_back(id);
 }
-boost::thread::id signal_manager::get_thread(thread_type type)
+boost::thread::id signal_manager::get_thread(int type)
 {
     std::lock_guard<std::mutex> lock(mtx);
     // TODO some kind of load balancing for multiple threads of a specific type
     auto current_thread = boost::this_thread::get_id();
-    auto itr = thread_map.find(type);
-    if (type != ANY && itr != thread_map.end())
+    auto itr = _thread_map.find(type);
+    if (type != 0 && itr != _thread_map.end())
     {
         if (itr->second.size())
         {
@@ -38,7 +38,7 @@ boost::thread::id signal_manager::get_thread(thread_type type)
 }
 std::shared_ptr<signal_base>& signal_manager::get_signal(const std::string& name, Loki::TypeInfo type)
 {
-    return signals[type][name];
+    return _signals[type][name];
 }
 
 void signal_registery::register_sender(const std::string& signal_name, Loki::TypeInfo type, void* sender, Loki::TypeInfo signal_signature)

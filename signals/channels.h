@@ -2,8 +2,9 @@
 #include "Defs.h"
 #include <future>
 #include <functional>
+#include "inter_thread.h"
 
-namespace signals
+namespace Signals
 {
     template<class T> class Channel {};
     template<class T> class QueuedChannel : public Channel<T> {};

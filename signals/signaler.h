@@ -79,7 +79,7 @@ inline void sig_##name(ARG1 arg1, ARG2 arg2, ARG3 arg3, ARG4 arg4, ARG5 arg5, AR
 #else
 
 #endif
-namespace signals
+namespace Signals
 {
     class SIGNAL_EXPORTS signaler
     {

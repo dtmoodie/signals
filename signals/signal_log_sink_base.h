@@ -1,6 +1,6 @@
 #pragma once
 
-namespace signals
+namespace Signals
 {
     class ISignalLogSink
     {

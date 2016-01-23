@@ -15,5 +15,5 @@ file(GLOB_RECURSE hdr "signals/*.h" "signals/*.hpp")
 add_library(signals SHARED ${src} ${hdr})
 target_link_libraries(signals ${OpenCV_LIBS})
 
-add_executable(main main.cpp)
-target_link_libraries(main signals ${OpenCV_LIBS})
+add_executable(test_signals main.cpp)
+target_link_libraries(test_signals signals ${OpenCV_LIBS})

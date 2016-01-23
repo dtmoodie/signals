@@ -1,11 +1,11 @@
 #pragma once
 #include "Defs.h"
 
-namespace signals
+namespace Signals
 {
     class SIGNAL_EXPORTS Receiver
     {
     public:
 
     };
-} // namespace signals
+} // namespace Signals

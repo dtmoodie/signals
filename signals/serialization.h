@@ -1,6 +1,6 @@
 #pragma once
 #include "Defs.h"
-namespace signals
+namespace Signals
 {
     template<class... T> class EXPORT_SIGNALS Serializer
     {
@@ -29,4 +29,4 @@ namespace signals
             Serializer<Ts...>::deserialize(ss, args...);
         }
     };
-} // namespace signals
+} // namespace Signals

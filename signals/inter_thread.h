@@ -4,7 +4,7 @@
 #include <boost/thread.hpp>
 #include "CudaUtils.hpp"
 
-namespace signals
+namespace Signals
 {
     class SIGNAL_EXPORTS thread_specific_queue
     {
@@ -14,4 +14,4 @@ namespace signals
         static void push(const std::function<void(void)>& f, boost::thread::id id = boost::this_thread::get_id());
         static void run();
     };
-} // namespace signals
+} // namespace Signals

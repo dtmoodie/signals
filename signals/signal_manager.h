@@ -5,26 +5,19 @@
 #include "signal_base.h"
 #include "LokiTypeInfo.h"
 #include <memory>
-//#include "signal.h"
-//#include "signal.h"
-namespace signals
+#include "signal.h"
+namespace Signals
 {
     template<class T> class signal;
     class SIGNAL_EXPORTS signal_manager
     {
     public:
-        enum thread_type
-        {
-            ANY = 0,
-            GUI = 1,
-            processing = 2,
-            worker = 3
-        };
+        signal_manager();
         static signal_manager* instance();
 
-        void register_thread(thread_type type, boost::thread::id id = boost::this_thread::get_id());
+        void register_thread(int type, boost::thread::id id = boost::this_thread::get_id());
 
-        boost::thread::id get_thread(thread_type type);
+        boost::thread::id get_thread(int type);
 
         template<typename T> signal<T>* get_signal(const std::string& name)
         {
@@ -35,10 +28,10 @@ namespace signals
             return std::dynamic_pointer_cast<signal<T>>(sig).get();
         }
     protected:
-        signal_manager();
+        
         std::shared_ptr<signal_base>& get_signal(const std::string& name, Loki::TypeInfo type);
-        std::map<Loki::TypeInfo, std::map<std::string, std::shared_ptr<signal_base>>> signals;
-        std::map<thread_type, std::vector<boost::thread::id>> thread_map;
+        std::map<Loki::TypeInfo, std::map<std::string, std::shared_ptr<signal_base>>> _signals;
+        std::map<int, std::vector<boost::thread::id>> _thread_map;
 
         std::mutex mtx;
     };
@@ -75,4 +68,4 @@ namespace signals
     {
         return signal_sender_registerer<T>(This, signal_name, signal_signature);
     }
-} // namespace signals
+} // namespace Signals

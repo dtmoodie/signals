@@ -1,11 +1,9 @@
 #pragma once
-#include <memory>
-#include "signal.h"
-#pragma once
 #include "Defs.h"
 #include <memory>
+//#include "signal.h"
 
-namespace signals
+namespace Signals
 {
     class connection;
 

@@ -1,6 +1,6 @@
 #include "connection.h"
 #include "signal_base.h"
-using namespace signals;
+using namespace Signals;
 
 connection::connection(int index, signal_base* parent): 
     _index(index)

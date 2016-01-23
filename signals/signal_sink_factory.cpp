@@ -1,7 +1,7 @@
 
 #include "signal_sink_factory.h"
 #include "signal_sink_base.h"
-using namespace signals;
+using namespace Signals;
 signal_sink_factory* signal_sink_factory::instance()
 {
     static signal_sink_factory* inst = nullptr;

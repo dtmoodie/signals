@@ -5,9 +5,10 @@
 #include "signal_base.h"
 #include "channels.h"
 #include "signal_sink_base.h"
+#include "signal_sink.h"
 #include "connection.h"
 
-namespace signals
+namespace Signals
 {
     template<class T> class signal { };
     template<class R, class...T> class signal<R(T...)> : public signal_base
@@ -57,13 +58,13 @@ namespace signals
 
             return std::shared_ptr<connection>(new connection(index, this));
         }
-        std::shared_ptr<connection> connect(const std::function<R(T...)>& f, signal_manager::thread_type dest)
+        std::shared_ptr<connection> connect(const std::function<R(T...)>& f, int dest_thread_type)
         {
             std::lock_guard<std::mutex> lock(mtx);
             int index = unused_indexes.back();
             unused_indexes.pop_back();
             receivers[index] = f;
-            auto destination_thread = signal_manager::get_thread(dest);
+            auto destination_thread = signal_manager::get_thread(dest_thread_type);
 
             if (destination_thread != boost::this_thread::get_id())
                 channels[index] = std::shared_ptr<Channel<R(T...)>>(new QueuedChannel<R(T...)>(destination_thread));

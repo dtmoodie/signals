@@ -3,6 +3,7 @@
 #include "signals/inter_thread.h"
 #include "signals/signal_manager.h"
 #include "signals/signal_sink_factory.h"
+#include "signals/signal_with_sink.h"
 
 class connection;
 
@@ -20,7 +21,7 @@ void function(int x, int y)
 }
 
 
-class TestSignalerImpl: public signals::signaler
+class TestSignalerImpl: public Signals::signaler
 {
 public:
     SIG_DEF(test1, int);
@@ -37,19 +38,19 @@ public:
 
 
 
-using namespace signals;
+using namespace Signals;
 int main()
 {
     test_class clas;
-    boost::thread work_thread(std::bind([]()->void{while(!boost::this_thread::interruption_requested()){signals::thread_specific_queue::run();}}));
-    auto test_ = signals::signal_manager::instance()->get_signal<void(int,int)>("test");
-    signal_manager::instance()->register_thread(signal_manager::GUI);
-    signal_manager::instance()->register_thread(signal_manager::processing, work_thread.get_id());
+    boost::thread work_thread(std::bind([]()->void{while(!boost::this_thread::interruption_requested()){Signals::thread_specific_queue::run();}}));
+    auto test_ = signal_manager::instance()->get_signal<void(int,int)>("test");
+    signal_manager::instance()->register_thread(thread_type::GUI);
+    signal_manager::instance()->register_thread(thread_type::processing, work_thread.get_id());
     TestSignalerImpl test2;
     test2.sig_test1(5);
     test2.sig_test2(5,6);
     test2.sig_test3(5,6,7);
-    signals::SignalWithSink<signals::signal_sink,void(int,int)> test;
+    Signals::signal_with_sink<signal_sink,void(int,int)> test;
     auto sink = signal_sink_factory::instance()->create_log_sink(test.get_signal_type());
     test.add_log_sink(sink);
     {
