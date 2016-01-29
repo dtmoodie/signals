@@ -13,11 +13,12 @@ namespace Signals
     {
     public:
         signal_manager();
-        static signal_manager* instance();
+        static signal_manager* get_instance();
+        static void set_instance(signal_manager* inst);
 
-        void register_thread(int type, boost::thread::id id = boost::this_thread::get_id());
+        virtual void register_thread(int type, boost::thread::id id = boost::this_thread::get_id());
 
-        boost::thread::id get_thread(int type);
+        virtual boost::thread::id get_thread(int type);
 
         template<typename T> signal<T>* get_signal(const std::string& name)
         {
@@ -29,7 +30,7 @@ namespace Signals
         }
     protected:
         
-        std::shared_ptr<signal_base>& get_signal(const std::string& name, Loki::TypeInfo type);
+        virtual std::shared_ptr<signal_base>& get_signal(const std::string& name, Loki::TypeInfo type);
         std::map<Loki::TypeInfo, std::map<std::string, std::shared_ptr<signal_base>>> _signals;
         std::map<int, std::vector<boost::thread::id>> _thread_map;
 

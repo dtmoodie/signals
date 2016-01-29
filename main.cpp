@@ -43,9 +43,9 @@ int main()
 {
     test_class clas;
     boost::thread work_thread(std::bind([]()->void{while(!boost::this_thread::interruption_requested()){Signals::thread_specific_queue::run();}}));
-    auto test_ = signal_manager::instance()->get_signal<void(int,int)>("test");
-    signal_manager::instance()->register_thread(thread_type::GUI);
-    signal_manager::instance()->register_thread(thread_type::processing, work_thread.get_id());
+    auto test_ = signal_manager::get_instance()->get_signal<void(int,int)>("test");
+    signal_manager::get_instance()->register_thread(thread_type::GUI);
+    signal_manager::get_instance()->register_thread(thread_type::processing, work_thread.get_id());
     TestSignalerImpl test2;
     test2.sig_test1(5);
     test2.sig_test2(5,6);

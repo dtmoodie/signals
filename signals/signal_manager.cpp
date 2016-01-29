@@ -4,15 +4,24 @@ using namespace Signals;
 signal_manager::signal_manager()
 {
 }
-signal_manager* signal_manager::instance()
+
+static signal_manager* g_instance = nullptr;
+
+
+signal_manager* signal_manager::get_instance()
 {
-    signal_manager* inst = nullptr;
-    if (inst == nullptr)
+    
+    if (g_instance == nullptr)
     {
-        inst = new signal_manager();
+        g_instance = new signal_manager();
     }
-    return inst;
+    return g_instance;
 }
+void signal_manager::set_instance(signal_manager* inst)
+{
+    g_instance = inst;
+}
+
 void signal_manager::register_thread(int type, boost::thread::id id)
 {
     std::lock_guard<std::mutex> lock(mtx);
