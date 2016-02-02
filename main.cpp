@@ -9,15 +9,17 @@ class connection;
 
 struct test_class
 {
-    void func(int x, int y)
+    bool func(int x, int y)
     {
-        std::cout << x << ", " << y << std::endl;;
+        std::cout << x << ", " << y << std::endl;
+        return false;
     }
 };
 
-void function(int x, int y)
+bool function(int x, int y)
 {
-    std::cout << x << ": " << y << std::endl;;
+    std::cout << x << ": " << y << std::endl;
+    return true;
 }
 
 
@@ -43,21 +45,23 @@ int main()
 {
     test_class clas;
     boost::thread work_thread(std::bind([]()->void{while(!boost::this_thread::interruption_requested()){Signals::thread_specific_queue::run();}}));
-    auto test_ = signal_manager::get_instance()->get_signal<void(int,int)>("test");
+
+    auto test_ = signal_manager::get_instance()->get_signal<bool(int,int)>("test");
     signal_manager::get_instance()->register_thread(thread_type::GUI);
     signal_manager::get_instance()->register_thread(thread_type::processing, work_thread.get_id());
-    TestSignalerImpl test2;
+    /*TestSignalerImpl test2;
     test2.sig_test1(5);
     test2.sig_test2(5,6);
-    test2.sig_test3(5,6,7);
-    Signals::signal_with_sink<signal_sink,void(int,int)> test;
+    test2.sig_test3(5,6,7);*/
+    Signals::signal_with_sink<signal_sink,bool(int,int)> test;
     auto sink = signal_sink_factory::instance()->create_log_sink(test.get_signal_type());
     test.add_log_sink(sink);
     {
         auto connection = test.connect(std::bind(&test_class::func, &clas, std::placeholders::_1, std::placeholders::_2), work_thread.get_id());
         for(int i = 0; i < 100000; ++i)
         {
-            test(5, 6);
+            auto result = test(5, 6);
+            result.get_result();
         }        
     }
     test(5, 6);

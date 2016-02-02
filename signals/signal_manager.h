@@ -6,9 +6,11 @@
 #include "LokiTypeInfo.h"
 #include <memory>
 #include "signal.h"
+#include "combiner.h"
+#include "boost/type_traits/function_traits.hpp"
 namespace Signals
 {
-    template<class T> class signal;
+    template<class T, class C = default_combiner<typename boost::function_traits<T>::result_type>> class signal;
     class SIGNAL_EXPORTS signal_manager
     {
     public:

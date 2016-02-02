@@ -7,11 +7,15 @@
 #include "signal_sink_base.h"
 #include "signal_sink.h"
 #include "connection.h"
-
+#include "combiner.h"
+#include "boost/type_traits/function_traits.hpp"
 namespace Signals
 {
-    template<class T> class signal { };
-    template<class R, class...T> class signal<R(T...)> : public signal_base
+    template<class Signature, 
+    class Combiner = default_combiner<typename boost::function_traits<Signature>::result_type>
+    > class signal { };
+
+    template<class R, class...T, class Combiner> class signal<R(T...), Combiner> : public signal_base
     {
     protected:
         std::map<int, std::function<R(T...)> > receivers;
@@ -19,7 +23,7 @@ namespace Signals
         std::list<int> unused_indexes;
         std::mutex mtx;
         std::shared_ptr<connection> serializer;
-
+        
         friend class connection;
         virtual void remove_receiver(int index)
         {
@@ -74,13 +78,15 @@ namespace Signals
             return std::shared_ptr<connection>(new connection(index, this));
         }
 
-        R operator()(T... args)
+        Combiner operator()(T... args)
         {
             std::lock_guard<std::mutex> lock(mtx); // Lock against adding new connections while executing
+            Combiner combiner;
             for (auto& itr : receivers)
             {
-                channels[itr.first]->exec(itr.second, args...);
+                combiner(channels[itr.first]->exec(itr.second, args...));
             }
+            return combiner;
         }
         virtual Loki::TypeInfo get_signal_type()
         {
