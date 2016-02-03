@@ -17,3 +17,15 @@ target_link_libraries(signals ${OpenCV_LIBS})
 
 add_executable(test_signals main.cpp)
 target_link_libraries(test_signals signals ${OpenCV_LIBS})
+
+install(TARGETS signals
+		RUNTIME DESTINATION bin
+		LIBRARY DESTINATION lib
+		ARCHIVE DESTINATION lib)
+
+install(DIRECTORY /
+		DESTINATION include
+        FILES_MATCHING PATTERN "*.h")
+install(DIRECTORY /
+		DESTINATION include
+		FILES_MATCHING PATTERN "*.hpp")
