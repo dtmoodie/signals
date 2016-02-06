@@ -10,17 +10,13 @@
 #include "boost/type_traits/function_traits.hpp"
 namespace Signals
 {
-    template<class T, class C = default_combiner<typename boost::function_traits<T>::result_type>> class signal;
+    template<class T, class C> class signal;
     class SIGNAL_EXPORTS signal_manager
     {
     public:
         signal_manager();
         static signal_manager* get_instance();
         static void set_instance(signal_manager* inst);
-
-        virtual void register_thread(int type, boost::thread::id id = boost::this_thread::get_id());
-
-        virtual boost::thread::id get_thread(int type);
 
         template<typename T> signal<T>* get_signal(const std::string& name)
         {
@@ -34,7 +30,7 @@ namespace Signals
         
         virtual std::shared_ptr<signal_base>& get_signal(const std::string& name, Loki::TypeInfo type);
         std::map<Loki::TypeInfo, std::map<std::string, std::shared_ptr<signal_base>>> _signals;
-        std::map<int, std::vector<boost::thread::id>> _thread_map;
+
 
         std::mutex mtx;
     };

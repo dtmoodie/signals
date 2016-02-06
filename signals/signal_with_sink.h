@@ -17,7 +17,7 @@ namespace Signals
     public:
         signal_with_sink() : signal<R(T...)>()
         {
-            signal_sink_factory::instance()->register_creator(&sink_creator<SINK, R, T...>::create, get_signal_type());
+            signal_sink_factory::instance()->register_creator(&sink_creator<SINK, R, T...>::create, signal<R(T...)>::get_signal_type());
         }
     };    
 }

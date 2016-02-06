@@ -4,7 +4,7 @@
 #include "signals/signal_manager.h"
 #include "signals/signal_sink_factory.h"
 #include "signals/signal_with_sink.h"
-
+#include "signals/thread_registry.h"
 class connection;
 
 struct test_class
@@ -47,8 +47,8 @@ int main()
     boost::thread work_thread(std::bind([]()->void{while(!boost::this_thread::interruption_requested()){Signals::thread_specific_queue::run();}}));
 
     auto test_ = signal_manager::get_instance()->get_signal<bool(int,int)>("test");
-    signal_manager::get_instance()->register_thread(thread_type::GUI);
-    signal_manager::get_instance()->register_thread(thread_type::processing, work_thread.get_id());
+    thread_registry::get_instance()->register_thread(thread_type::GUI);
+    thread_registry::get_instance()->register_thread(thread_type::processing, work_thread.get_id());
     /*TestSignalerImpl test2;
     test2.sig_test1(5);
     test2.sig_test2(5,6);

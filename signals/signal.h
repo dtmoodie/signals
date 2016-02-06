@@ -1,7 +1,7 @@
 #pragma once
 #include "Defs.h"
 #include "placeholder.h"
-#include "signal_manager.h"
+#include "thread_registry.h"
 #include "signal_base.h"
 #include "channels.h"
 #include "signal_sink_base.h"
@@ -14,6 +14,7 @@ namespace Signals
     template<class Signature, 
     class Combiner = default_combiner<typename boost::function_traits<Signature>::result_type>
     > class signal { };
+
 
     template<class R, class...T, class Combiner> class signal<R(T...), Combiner> : public signal_base
     {
@@ -68,7 +69,7 @@ namespace Signals
             int index = unused_indexes.back();
             unused_indexes.pop_back();
             receivers[index] = f;
-            auto destination_thread = signal_manager::get_thread(dest_thread_type);
+            auto destination_thread = thread_registry::get_thread(dest_thread_type);
 
             if (destination_thread != boost::this_thread::get_id())
                 channels[index] = std::shared_ptr<Channel<R(T...)>>(new QueuedChannel<R(T...)>(destination_thread));

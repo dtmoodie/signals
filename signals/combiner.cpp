@@ -5,7 +5,7 @@ void default_combiner<void>::operator()()
 {
 
 }
-void default_combiner<void>::operator()(std::future<void>& val)
+void default_combiner<void>::operator()(std::future<void> val)
 {
 
 }
@@ -22,7 +22,7 @@ void default_combiner<bool>::operator()(bool val)
 {
 
 }
-void default_combiner<bool>::operator()(std::future<bool>& val)
+void default_combiner<bool>::operator()(std::future<bool> val)
 {
     results.push_back(val.share());
     //results.push_back(val);

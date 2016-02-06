@@ -1,6 +1,8 @@
 #pragma once
 #include <future>
 #include "Defs.h"
+#include <vector>
+#include <memory>
 namespace Signals
 {
     template<class R> struct SIGNAL_EXPORTS default_combiner
@@ -21,7 +23,7 @@ namespace Signals
     template<> struct SIGNAL_EXPORTS default_combiner<void>
     {
         void operator()();
-        void operator()(std::future<void>& val);
+        void operator()(std::future<void> val);
         void get_result();
     private:
         std::vector<std::shared_future<void>> results;
@@ -30,7 +32,7 @@ namespace Signals
     {
         default_combiner();
         void operator()(bool val);
-        void operator()(std::future<bool>& val);
+        void operator()(std::future<bool> val);
         bool get_result();
     private:
         std::vector<std::shared_future<bool>> results;

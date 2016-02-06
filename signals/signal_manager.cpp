@@ -22,29 +22,7 @@ void signal_manager::set_instance(signal_manager* inst)
     g_instance = inst;
 }
 
-void signal_manager::register_thread(int type, boost::thread::id id)
-{
-    std::lock_guard<std::mutex> lock(mtx);
-    auto& threads = _thread_map[type];
-    if (std::count(threads.begin(), threads.end(), id) == 0)
-        threads.push_back(id);
-}
-boost::thread::id signal_manager::get_thread(int type)
-{
-    std::lock_guard<std::mutex> lock(mtx);
-    // TODO some kind of load balancing for multiple threads of a specific type
-    auto current_thread = boost::this_thread::get_id();
-    auto itr = _thread_map.find(type);
-    if (type != 0 && itr != _thread_map.end())
-    {
-        if (itr->second.size())
-        {
-            if (std::count(itr->second.begin(), itr->second.end(), current_thread) == 0) // If the current thread is not of appropriate type
-                return itr->second.back();
-        }
-    }
-    return current_thread;
-}
+
 std::shared_ptr<signal_base>& signal_manager::get_signal(const std::string& name, Loki::TypeInfo type)
 {
     return _signals[type][name];
