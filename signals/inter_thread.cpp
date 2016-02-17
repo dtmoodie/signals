@@ -15,4 +15,4 @@ void thread_specific_queue::run()
     }
 }
 
-std::map<boost::thread::id, EagleLib::concurrent_queue<std::function<void(void)>>> thread_specific_queue::thread_queues;
+std::map<boost::thread::id, concurrent_queue<std::function<void(void)>>> thread_specific_queue::thread_queues;

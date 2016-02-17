@@ -14,9 +14,6 @@
 #pragma comment(lib, "signals.lib")
 #endif
 #endif
-//#define THREAD_TYPE_ANY 0
-//#define THREAD_TYPE_GUI 1
-//#define THREAD_TYPE_PROCESSING 2
 
 namespace Signals
 {
