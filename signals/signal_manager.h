@@ -52,9 +52,13 @@ namespace Signals
 			register_sender(Loki::TypeInfo(typeid(T)), name, Loki::TypeInfo(typeid(C)), This, description);
 			auto&sig = get_signal(name, Loki::TypeInfo(typeid(typed_signal_base<T, combiner>)));
 			if (!sig)
-				sig.reset(new typed_signal<T, combiner, Sink>(description));
-
-			return std::dynamic_pointer_cast<typed_signal_base<T, combiner>>(sig).get();
+			{
+				static sink_constructor<T, Sink<T>> sink_constructor;
+				sig.reset(new typed_signal_base<T, combiner>(description));
+			}
+				
+			auto typed_sig = dynamic_cast<typed_signal_base<T, combiner>*>(sig.get());
+			return typed_sig;
 		}
 		template<typename T, template<class> class combiner = default_combiner> std::shared_ptr<Signals::connection> connect(const std::string& name, std::function<T> f, boost::thread::id destination_thread = boost::this_thread::get_id(), const std::string& receiver_description = "", int line_number = -1, const std::string& filename = "")
 		{

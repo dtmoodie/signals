@@ -1,17 +1,16 @@
 #pragma once
 #include "Defs.h"
-#include <map>
 #include <boost/thread.hpp>
-#include "concurrent_queue.hpp"
+#include <functional>
 
 namespace Signals
 {
     class SIGNAL_EXPORTS thread_specific_queue
     {
-    protected:
-        static std::map<boost::thread::id, concurrent_queue<std::function<void(void)>>> thread_queues;
     public:
         static void push(const std::function<void(void)>& f, boost::thread::id id = boost::this_thread::get_id());
         static void run();
+		// Register a notifier function to signal new data input onto a queue
+		static void register_notifier(const std::function<void(void)>& f, boost::thread::id id = boost::this_thread::get_id());
     };
 } // namespace Signals

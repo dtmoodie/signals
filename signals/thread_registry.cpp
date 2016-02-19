@@ -34,7 +34,7 @@ boost::thread::id thread_registry::get_thread(int type)
 
 thread_registry* thread_registry::get_instance()
 {
-    thread_registry* inst = nullptr;
+    static thread_registry* inst = nullptr;
     if(inst == nullptr)
         inst = new thread_registry();
     return inst;
