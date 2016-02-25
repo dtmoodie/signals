@@ -95,15 +95,15 @@ namespace Signals
 			return std::shared_ptr<connection>(new connection(index, this));
 		}
 
-        std::shared_ptr<connection> connect(const std::function<R(T...)>& f, int dest_thread_type)
+        std::shared_ptr<connection> connect(const std::function<R(T...)>& f, int dest_thread_type, bool force_queued = false)
         {
             std::lock_guard<std::mutex> lock(mtx);
             int index = unused_indexes.back();
             unused_indexes.pop_back();
             receivers[index] = f;
-            auto destination_thread = thread_registry::get_thread(dest_thread_type);
+            auto destination_thread = thread_registry::get_instance()->get_thread(dest_thread_type);
 
-            if (destination_thread != boost::this_thread::get_id())
+            if (destination_thread != boost::this_thread::get_id() || force_queued)
                 channels[index] = std::shared_ptr<Channel<R(T...)>>(new QueuedChannel<R(T...)>(destination_thread));
             else
                 channels[index] = std::shared_ptr<Channel<R(T...)>>(new Channel<R(T...)>());

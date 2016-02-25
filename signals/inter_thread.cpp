@@ -49,7 +49,7 @@ void thread_specific_queue::run()
 {
 	impl::inst()->run();
 }
-void register_notifier(const std::function<void(void)>& f, boost::thread::id id)
+void thread_specific_queue::register_notifier(const std::function<void(void)>& f, boost::thread::id id)
 {
 	impl::inst()->register_notifier(f, id);
 }
