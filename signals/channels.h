@@ -29,7 +29,6 @@ namespace Signals
         {
             f(args...);
             promise.set_value();
-            delete this;
         }
         void exec(const std::function<void(T...)> f, T... args)
         {
@@ -66,9 +65,13 @@ namespace Signals
 
         virtual std::future<R> exec(const std::function<R(T...)>& f, T... args)
         {
-            auto exec = new executor<R, T...>();
+            std::shared_ptr<executor<R,T...> exec(new executor<R, T...>());
             
-            thread_specific_queue::push(std::bind(&executor<R, T...>::exec_on_thread, exec, f, args...), destination_thread);
+            //thread_specific_queue::push(std::bind(&executor<R, T...>::exec_on_thread, exec, f, args...), destination_thread);
+            thread_specific_queue::push([f, exec, args...]()->void
+            {
+                exec->exec_on_thread(f, args...);
+            }, destination_thread);
 
             return exec->promise.get_future();
         }
@@ -80,9 +83,13 @@ namespace Signals
 
         virtual std::future<void> exec(const std::function<void(T...)>& f, T... args)
         {
-            auto exec = new executor<void, T...>();
+            std::shared_ptr<executor<void,T...>> exec(new executor<void, T...>());
 
-            thread_specific_queue::push(std::bind(&executor<void, T...>::exec_on_thread, exec, f, args...), destination_thread);
+            //thread_specific_queue::push(std::bind(&executor<void, T...>::exec_on_thread, exec, f, args...), destination_thread);
+            thread_specific_queue::push([f, exec, args...]()->void
+            {
+                exec->exec_on_thread(f, args...);
+            }, destination_thread);
 
             return exec->promise.get_future();
         }
