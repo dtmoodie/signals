@@ -8,7 +8,7 @@
 
 namespace Signals
 {
-    class SIGNAL_EXPORTS signal_sink_base;
+    class signal_sink_base;
 
     class SIGNAL_EXPORTS signal_sink_factory
     {

@@ -65,13 +65,13 @@ namespace Signals
 
         virtual std::future<R> exec(const std::function<R(T...)>& f, T... args)
         {
-            std::shared_ptr<executor<R,T...> exec(new executor<R, T...>());
+            std::shared_ptr<executor<R,T...>> exec(new executor<R, T...>());
             
             //thread_specific_queue::push(std::bind(&executor<R, T...>::exec_on_thread, exec, f, args...), destination_thread);
-            thread_specific_queue::push([f, exec, args...]()->void
+            thread_specific_queue::push(std::bind([f, exec](T... args_)->void
             {
-                exec->exec_on_thread(f, args...);
-            }, destination_thread);
+                exec->exec_on_thread(f, args_...);
+            }, args...), destination_thread);
 
             return exec->promise.get_future();
         }
@@ -86,10 +86,10 @@ namespace Signals
             std::shared_ptr<executor<void,T...>> exec(new executor<void, T...>());
 
             //thread_specific_queue::push(std::bind(&executor<void, T...>::exec_on_thread, exec, f, args...), destination_thread);
-            thread_specific_queue::push([f, exec, args...]()->void
+            thread_specific_queue::push(std::bind([f, exec](T... args_)->void
             {
-                exec->exec_on_thread(f, args...);
-            }, destination_thread);
+                exec->exec_on_thread(f, args_...);
+            }, args...), destination_thread);
 
             return exec->promise.get_future();
         }
