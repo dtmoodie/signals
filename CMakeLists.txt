@@ -16,6 +16,7 @@ target_link_libraries(signals ${OpenCV_LIBS})
 
 add_executable(test_signals main.cpp)
 target_link_libraries(test_signals signals ${Boost_LIBRARIES})
+set_target_properties(test_signals PROPERTIES FOLDER Tests)
 
 CONFIGURE_FILE(SignalsConfig.cmake.in ${CMAKE_BINARY_DIR}/SignalsConfig.cmake @ONLY)
 
