@@ -5,6 +5,7 @@ project(advanced_signals)
 find_package(Boost REQUIRED thread system log log_setup)
   include_directories(${Boost_INCLUDE_DIRS})
   link_directories(${Boost_LIBRARY_DIR_RELEASE})
+  link_directories(${Boost_LIBRARY_DIR})
 
 include_directories(${CMAKE_CURRENT_SOURCE_DIR})
 

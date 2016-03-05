@@ -5,8 +5,9 @@
 #include <memory>
 namespace Signals
 {
-    template<class R> struct SIGNAL_EXPORTS default_combiner
+    template<class R> class SIGNAL_EXPORTS default_combiner
     {
+	public:
         void operator()(R val)
         {
             
@@ -20,16 +21,18 @@ namespace Signals
             return R();
         }
     };
-    template<> struct SIGNAL_EXPORTS default_combiner<void>
+    template<> class SIGNAL_EXPORTS default_combiner<void>
     {
+	public:
         void operator()();
         void operator()(std::future<void> val);
         void get_result();
     private:
         std::vector<std::shared_future<void>> results;
     };
-    template<> struct SIGNAL_EXPORTS default_combiner<bool>
+    template<> class SIGNAL_EXPORTS default_combiner<bool>
     {
+	public:
         default_combiner();
         void operator()(bool val);
         void operator()(std::future<bool> val);
