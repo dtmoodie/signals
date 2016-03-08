@@ -138,7 +138,7 @@ namespace Signals
 		template<class...>class Sink = signal_sink
 	> class typed_signal : public typed_signal_base<Signature, Combiner>{ };
 
-    template<class R, class...T, template<class>class Combiner, template<class...>class Sink> class typed_signal<R(T...), Combiner, Sink> : public typed_signal_base<R(T...), Combiner>
+    template<class R, class...T, template<class>class Combiner, template<class...>class Sink> class typed_signal<R(T...), Combiner, Sink> : public typed_signal_base<R(T...), Combiner>, public meta_signal<R(T...)>
 	{
 	public:
 		static sink_constructor<R(T...), Sink<R(T...)>> _sink_constructor;
