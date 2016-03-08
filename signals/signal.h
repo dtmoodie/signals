@@ -8,8 +8,11 @@
 #include "signal_sink.h"
 #include "connection.h"
 #include "combiner.h"
-#include "boost/type_traits/function_traits.hpp"
 #include "signal_sink_factory.h"
+#include "serialization.h"
+#include "boost/type_traits/function_traits.hpp"
+#include "meta_signal.hpp"
+
 namespace Signals
 {
 
@@ -18,7 +21,7 @@ namespace Signals
 	> class typed_signal_base { };
 
 
-	template<class R, class...T, template<class>class Combiner> class typed_signal_base<R(T...), Combiner> : public signal_base
+	template<class R, class...T, template<class>class Combiner> class typed_signal_base<R(T...), Combiner> : public signal_base, public meta_signal<R(T...)>
     {
     protected:
         std::map<int, std::function<R(T...)> >				receivers;
@@ -115,6 +118,10 @@ namespace Signals
         {
             std::lock_guard<std::mutex> lock(mtx); // Lock against adding new connections while executing
 			Combiner<typename boost::function_traits<R(T...)>::result_type> combiner;
+            for(auto& itr : log_sinks)
+            {
+                log_channels[itr.first]->exec(itr.second, args...);
+            }
             for (auto& itr : receivers)
             {
                 combiner(channels[itr.first]->exec(itr.second, args...));

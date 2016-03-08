@@ -69,13 +69,29 @@ int main()
 		Signals::typed_signal_base<void(int, int)> test;
 		boost::thread work_thread(std::bind([]()->void{while (!boost::this_thread::interruption_requested()){ Signals::thread_specific_queue::run(); }}));
 		auto receiver_connection = test.connect(std::bind(&function, std::placeholders::_1, std::placeholders::_2), work_thread.get_id());
-		for (int i = 0; i < 100; ++i)
+		for (int i = 0; i < 5; ++i)
 		{
 			BOOST_LOG_TRIVIAL(info) << "Emitting signal";
 			test(i, i + 1); // Send signal on main thread, write out on worker thread
 		}
+        auto proxy = Signals::serialization::text::factory::instance()->get_proxy(&test);
+        if(proxy)
+        {
+            BOOST_LOG_TRIVIAL(info) << "Serialized sending of signal";
+            proxy->send(&test, "5 ! 6");
+            proxy->install(&test);
+        }else
+        {
+            LOG(error) << "Null proxy returned for signal of type " << test.get_signal_type().name();
+        }
 		work_thread.interrupt();
 		work_thread.join();
+        for(int i = 0; i < 5; ++i)
+        {
+            BOOST_LOG_TRIVIAL(info) << "Emitting signal, to be auto serialized";
+            test(i, i+1);
+        }
+        delete proxy;
 	}
 
 	{
@@ -89,38 +105,16 @@ int main()
 	}
 	Signals::signal_manager::get_instance()->print_signal_map();
 	{
+        Signals::typed_signal_base<void(void)> test;
 
-
-	}
-
-
-	// classes that uses signals and the signal manaer
-    /*test_class clas;
-    
-
-    auto test_ = signal_manager::get_instance()->get_signal<bool(int,int)>("test");
-	Signals::signal<void(int), default_combiner<void>, multi_sink<signal_sink<void(int)>, log_sink<int>>> test_multi_sink;
-    thread_registry::get_instance()->register_thread(thread_type::GUI);
-    thread_registry::get_instance()->register_thread(thread_type::processing, work_thread.get_id());
-	TestSignalerImpl signaler_class;
-	signaler_class.setup_signals(signal_manager::get_instance());
-	signaler_class.sig_test10(1,2,3,4,5,6,7,8,9,10);
-	
-    auto sink = signal_sink_factory::instance()->create_log_sink(test.get_signal_type(), "null_sink");
-	
-    test.add_log_sink(sink);
-    {
-        auto connection = test.connect(std::bind(&test_class::func, &clas, std::placeholders::_1, std::placeholders::_2), work_thread.get_id());
-		
-        for(int i = 0; i < 100000; ++i)
+        auto proxy = Signals::serialization::text::factory::instance()->get_proxy(&test);
+        if(proxy)
         {
-            auto result = test(5, 6);
-            result.get_result();
-        }        
-    }
-    test(5, 6);
+            proxy->send(&test, "");
+            delete proxy;
+        }
+	}
     
-    
-	*/
+
     return 0;    
 }
