@@ -3,12 +3,13 @@
 #include "LokiTypeInfo.h"
 #include "placeholder.h"
 #include "connection.h"
+#include "logging.hpp"
+
 
 #include <sstream>
 #include <functional>
 #include <map>
 #include <memory>
-#include <boost/type_traits.hpp>
 template<int ...>
 struct seq { };
 
@@ -20,21 +21,7 @@ struct gens<0, S...> {
   typedef seq<S...> type;
 };
 
-#define HAS_MEM_FUNC(func, name)                                        \
-    template<typename T, typename Sign>                                 \
-    struct name {                                                       \
-        typedef char yes[1];                                            \
-        typedef char no [2];                                            \
-        template <typename U, U> struct type_check;                     \
-        template <typename _1> static yes &chk(type_check<Sign, &std::placeholders::_1::func > *); \
-        template <typename   > static no  &chk(...);                    \
-        static bool const value = sizeof(chk<T>(0)) == sizeof(yes);     \
-    }
-HAS_MEM_FUNC(operator<<, has_serialize);
-HAS_MEM_FUNC(operator>>, has_deserialize);
-
-
-  
+ 
 namespace Signals
 {
 	class signal_base;
@@ -78,9 +65,11 @@ namespace Signals
 
 				}
 			};
+
+#ifdef SUPPORTS_EXPRESSION_SFINAE
             // ********************* serialize SFINAE *****************************************
             //http://stackoverflow.com/questions/257288/is-it-possible-to-write-a-c-template-to-check-for-a-functions-existence
-            /*template<typename T> auto serialize_impl(std::ostream& ss, T& val, unsigned int)->decltype(ss << val, void)
+            template<typename T> auto serialize_impl(std::ostream& ss, T& val, unsigned int)->decltype(ss << val, void)
             {
             }
             template<typename T> auto serialize_impl(std::ostream& ss, T& val, int)->decltype(ss << val, void)
@@ -95,25 +84,25 @@ namespace Signals
             }
             template<typename T> auto deserialize_impl(std::istream& ss, T& val, int) ->decltype(ss >> val, void)
             {
-                DECLARE_TRAITS_HAS_FUNC_C()
                 std::string tmp;
                 std::getline(ss, tmp, '!');
                 std::stringstream tmpss;
                 tmpss << tmp;
                 tmpss >> val;
-            }*/
-            template<typename T> void serialize_impl(std::stringstream& ss, T& val, 
-                std::enable_if<!has_serialize<std::stringstream, std::stringstream&(std::stringstream::*)(T&)>::value>::type* = 0)
-            {
-                //ss << " ! " << val;
             }
-            template<typename T> void serialize_impl(std::stringstream& ss, T& val, 
-                std::enable_if<has_serialize<std::stringstream, std::stringstream&(std::stringstream::*)(T&)>::value>::type* = 0)
+#else
+            template<typename T> void serialize_impl(std::stringstream& ss, T& val, int,
+                typename std::enable_if<std::is_integral<T>::value || std::is_floating_point<T>::value>::type* = 0)
             {
                 ss << " ! " << val;
             }
-            template<typename T> void deserialize_impl(std::stringstream& ss, T& val, 
-                std::enable_if<has_deserialize<std::stringstream, std::stringstream&(std::stringstream::*)(T&)>::value>::type* = 0)
+            template<typename T> void serialize_impl(std::stringstream& ss, T& val, unsigned int,
+                typename std::enable_if<!(std::is_integral<T>::value || std::is_floating_point<T>::value)>::type* = 0)
+            {
+                LOG(debug) << "Non specialized serialize called for " << typeid(T).name();
+            }
+            template<typename T> void deserialize_impl(std::stringstream& ss, T& val, int,
+                typename std::enable_if<std::is_integral<T>::value || std::is_floating_point<T>::value>::type* = 0)
             {
                 std::string tmp;
                 std::getline(ss, tmp, '!');
@@ -121,12 +110,12 @@ namespace Signals
                 tmpss << tmp;
                 tmpss >> val;
             }
-            template<typename T> void deserialize_impl(std::stringstream& ss, T& val, 
-                std::enable_if<!has_deserialize<std::stringstream, std::stringstream&(std::stringstream::*)(T&)>::value>::type* = 0)
+            template<typename T> void deserialize_impl(std::stringstream& ss, T& val, unsigned int,
+                typename std::enable_if<!(std::is_integral<T>::value || std::is_floating_point<T>::value)>::type* = 0)
             {
-                
+                LOG(debug) << "Non specialized deserialize called for " << typeid(T).name();
             }
-
+#endif
             template<int N, class... T> class tuple_serializer
             {
             public:

@@ -23,6 +23,8 @@ struct impl
 			std::lock_guard<std::mutex> lock(mtx);
 			queue = &thread_queues[id];
 		}
+        if(queue->first.size() > 100)
+            LOG(warning) << "Queue overflow " << queue->first.size() << " for thread " << id;
 		queue->first.push(f);
 		if (queue->second)
 			queue->second();
@@ -40,6 +42,19 @@ struct impl
 			f();
 		}
 	}
+    void run_once()
+    {
+        std::pair<concurrent_queue<std::function<void(void)>>, std::function<void(void)>>* queue = nullptr;
+		{
+			std::lock_guard<std::mutex> lock(mtx);
+			queue = &thread_queues[boost::this_thread::get_id()];
+		}
+		std::function<void(void)> f;
+		if(queue->first.try_pop(f))
+		{
+			f();
+		}
+    }
 };
 void thread_specific_queue::push(const std::function<void(void)>& f, boost::thread::id id)
 {
@@ -52,4 +67,8 @@ void thread_specific_queue::run()
 void thread_specific_queue::register_notifier(const std::function<void(void)>& f, boost::thread::id id)
 {
 	impl::inst()->register_notifier(f, id);
+}
+void thread_specific_queue::run_once()
+{
+	impl::inst()->run_once();
 }
