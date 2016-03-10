@@ -16,9 +16,9 @@
 namespace Signals
 {
 
-	template<class Signature,
-	template<class> class Combiner = default_combiner
-	> class typed_signal_base { };
+    /*template<class Signature,
+    template<class> class Combiner = Signals::default_combiner
+    > class typed_signal_base { };*/
 
 
 	template<class R, class...T, template<class>class Combiner> class typed_signal_base<R(T...), Combiner> : public signal_base, public meta_signal<R(T...)>
