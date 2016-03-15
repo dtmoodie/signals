@@ -43,7 +43,11 @@ namespace Signals
 		{
 			class SIGNAL_EXPORTS serialization_proxy_base
 			{
+            protected:
+                std::ostream* _dest;
 			public:
+                serialization_proxy_base();
+                virtual void set_output_iostream(std::ostream* stream);
 				virtual void install(signal_base* signal);
 				virtual void send(signal_base* signal, std::string str);
 			};
@@ -63,7 +67,7 @@ namespace Signals
 			template<class... T> class SIGNAL_EXPORTS Serializer
 			{
 			public:
-				static void serialize(T... args)
+				static void serialize(std::ostream* dest, T... args)
 				{
 
 				}
@@ -149,10 +153,13 @@ namespace Signals
 			template<class T1, class ... Ts> class SIGNAL_EXPORTS Serializer<T1, Ts...> : public Serializer<Ts...>
 			{
 			public:
-				static void serialize(T1 arg1, Ts... args)
+				static void serialize(std::ostream* dest, T1 arg1, Ts... args)
 				{
-					std::cout << arg1 << " ";
-					Serializer<Ts...>::serialize(args...);
+                    if(dest)
+                        *dest << arg1 << " ";
+                    else
+					    std::cout << arg1 << " ";
+					Serializer<Ts...>::serialize(dest, args...);
 				}
 				static void serialize_ss(std::stringstream& ss, T1 arg1, Ts... args)
 				{
@@ -200,8 +207,11 @@ namespace Signals
 				}
                 void receive(T... args)
                 {
-                    Serializer<T...>::serialize(args...);
-                    std::cout << "\n";
+                    Serializer<T...>::serialize(_dest, args...);
+                    if(_dest)
+                        *_dest << "\n";
+                    else
+                        std::cout << "\n";
                 }
 			};
             template<class R> class SIGNAL_EXPORTS serialization_proxy<R()>: public serialization_proxy_base

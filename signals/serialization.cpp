@@ -6,7 +6,14 @@
 using namespace Signals;
 using namespace Signals::serialization;
 using namespace Signals::serialization::text;
-
+serialization_proxy_base::serialization_proxy_base()
+{
+    _dest = nullptr;
+}
+void serialization_proxy_base::set_output_iostream(std::ostream* stream)
+{
+    _dest = stream;
+}
 serialization_proxy_base* factory::get_proxy(signal_base* signal)
 {
 	return get_proxy(signal->get_signal_type());
