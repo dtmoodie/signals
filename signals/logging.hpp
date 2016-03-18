@@ -6,12 +6,13 @@
 #ifndef _CRT_SECURE_NO_WARNINGS
 #define _CRT_SECURE_NO_WARNINGS // "secure" CRT not available on all platforms  --add this at the top of all CPP files that give "function or variable may be unsafe" warnings
 #endif
+
 #ifdef _WIN32
-#define NOMINMAX
-#pragma comment(lib, "Dbghelp.lib")
+  #define NOMINMAX
+  #pragma comment(lib, "Dbghelp.lib")
 #else
-#include <execinfo.h>
-#include <cxxabi.h>
+  #include <execinfo.h>
+  #include <cxxabi.h>
 #endif
 
 #define LOG(severity) BOOST_LOG_TRIVIAL(severity) << "[" << __FUNCTION__ << "] "
@@ -22,4 +23,5 @@
 namespace Signals
 {
     void SIGNAL_EXPORTS collect_callstack(size_t skipLevels, bool makeFunctionNamesStandOut, const std::function<void(const std::string&)>& write);
+    std::string SIGNAL_EXPORTS print_callstack(size_t skipLevels, bool makeFunctionNamesStandOut);
 }

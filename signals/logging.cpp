@@ -8,7 +8,7 @@
 #endif
 #include <algorithm>
 #include <iostream>
-
+#include <sstream>
 // https://github.com/Microsoft/CNTK/blob/7c811de9e33d0184fdf340cd79f4f17faacf41cc/Source/Common/ExceptionWithCallStack.cpp
 
 #ifdef _WIN32
@@ -148,6 +148,12 @@ static inline wcstring utf16(const std::wstring& p)
         }
     }
 
+    std::string Signals::print_callstack(size_t skipLevels, bool makeFunctionNamesStandOut)
+    {
+        std::stringstream ss;
+        collect_callstack(skipLevels, makeFunctionNamesStandOut, [&ss](const std::string& str){ss << str; });
+        return ss.str();
+    }
 
     void Signals::collect_callstack(size_t skipLevels, bool makeFunctionNamesStandOut, const std::function<void(const std::string&)>& write)
     {
