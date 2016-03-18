@@ -10,17 +10,11 @@
 #include "combiner.h"
 #include "signal_sink_factory.h"
 #include "serialization.h"
-#include "boost/type_traits/function_traits.hpp"
 #include "meta_signal.hpp"
 
+#include <list>
 namespace Signals
 {
-
-    /*template<class Signature,
-    template<class> class Combiner = Signals::default_combiner
-    > class typed_signal_base { };*/
-
-
 	template<class R, class...T, template<class>class Combiner> class typed_signal_base<R(T...), Combiner> : public signal_base, public meta_signal<R(T...)>
     {
     protected:
@@ -62,7 +56,7 @@ namespace Signals
 			for (int i = 0; i < 256; ++i)
                 unused_indexes.push_back(i);
         }
-        virtual void add_log_sink(std::shared_ptr<signal_sink_base> sink, boost::thread::id destination_thread = boost::this_thread::get_id())
+        virtual void add_log_sink(std::shared_ptr<signal_sink_base> sink, size_t destination_thread = get_this_thread())
         {
             auto typed_sink = std::dynamic_pointer_cast<signal_sink<R(T...)>>(sink);
 			if (typed_sink)
@@ -71,26 +65,26 @@ namespace Signals
 			}
         }
 
-		std::shared_ptr<connection> connect(const std::function<R(T...)>& f, boost::thread::id destination_thread = boost::this_thread::get_id(), bool force_queue = false)
+		std::shared_ptr<connection> connect(const std::function<R(T...)>& f, size_t destination_thread = get_this_thread(), bool force_queue = false)
         {
             std::lock_guard<std::mutex> lock(mtx);
             int index = unused_indexes.back();
             unused_indexes.pop_back();
             receivers[index] = f;
-            if (destination_thread != boost::this_thread::get_id() || force_queue)
+            if (destination_thread != get_this_thread() || force_queue)
                 channels[index] = std::shared_ptr<Channel<R(T...)>>(new QueuedChannel<R(T...)>(destination_thread));
             else
                 channels[index] = std::shared_ptr<Channel<R(T...)>>(new Channel<R(T...)>());
             return std::shared_ptr<connection>(new connection(index, this));
         }
 
-		std::shared_ptr<connection> connect_log_sink(const std::function<void(T...)>& f, boost::thread::id destination_thread = boost::this_thread::get_id())
+		std::shared_ptr<connection> connect_log_sink(const std::function<void(T...)>& f, size_t destination_thread = get_this_thread())
 		{
 			std::lock_guard<std::mutex> lock(mtx);
 			int index = unused_indexes.back();
 			unused_indexes.pop_back();
 			log_sinks[index] = f;
-			if (destination_thread != boost::this_thread::get_id())
+			if (destination_thread != get_this_thread())
 				log_channels[index] = std::shared_ptr<Channel<void(T...)>>(new QueuedChannel<void(T...)>(destination_thread));
 			else
 				log_channels[index] = std::shared_ptr<Channel<void(T...)>>(new Channel<void(T...)>());
@@ -106,7 +100,7 @@ namespace Signals
             receivers[index] = f;
             auto destination_thread = thread_registry::get_instance()->get_thread(dest_thread_type);
 
-            if (destination_thread != boost::this_thread::get_id() || force_queued)
+            if (destination_thread != get_this_thread() || force_queued)
                 channels[index] = std::shared_ptr<Channel<R(T...)>>(new QueuedChannel<R(T...)>(destination_thread));
             else
                 channels[index] = std::shared_ptr<Channel<R(T...)>>(new Channel<R(T...)>());
@@ -114,10 +108,12 @@ namespace Signals
             return std::shared_ptr<connection>(new connection(index, this));
         }
 
-		Combiner<typename boost::function_traits<R(T...)>::result_type> operator()(T... args)
+		//Combiner<typename boost::function_traits<R(T...)>::result_type> operator()(T... args)
+        Combiner<R> operator()(T... args)
         {
             std::lock_guard<std::mutex> lock(mtx); // Lock against adding new connections while executing
-			Combiner<typename boost::function_traits<R(T...)>::result_type> combiner;
+			//Combiner<typename boost::function_traits<R(T...)>::result_type> combiner;
+            Combiner<R> combiner;
             for(auto& itr : log_sinks)
             {
                 log_channels[itr.first]->exec(itr.second, args...);

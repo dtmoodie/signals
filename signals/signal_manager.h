@@ -4,6 +4,7 @@
 #include "combiner.h"
 #include "signal_base.h"
 #include "logging.hpp"
+#include "thread_registry.h"
 
 #include <mutex>
 #include <memory>
@@ -11,23 +12,10 @@
 #include "LokiTypeInfo.h"
 
 
-#include <boost/thread.hpp>
-#include "boost/type_traits/function_traits.hpp"
-#include <boost/preprocessor.hpp>
+//#include <boost/thread.hpp>
+//#include "boost/type_traits/function_traits.hpp"
+//#include <boost/preprocessor.hpp>
 
-/*
-#define CONNECT_3(type,name,function)connect<type>(name, function, boost::this_thread::get_id(), "", __LINE__, __FILE__)
-#define CONNECT_4(type,name,function,thread)connect<type>(name, function, thread, "", __LINE__, __FILE__)
-#define CONNECT_5(type,name,function,thread,description)connect<type>(name, function, thread, description, __LINE__, __FILE__)
-
-//#define CONNECT(type, name, function, thread, description)connect<type>(name, function, thread, description, __LINE__, __FILE__)
-
-#ifdef _MSC_VER
-#define CONNECT(...) BOOST_PP_CAT( BOOST_PP_OVERLOAD(CONNECT_, __VA_ARGS__ )(__VA_ARGS__), BOOST_PP_EMPTY() )
-#else
-#define CONNECT(...) BOOST_PP_CAT( BOOST_PP_OVERLOAD(CONNECT_, __VA_ARGS__ )(name, __VA_ARGS__), BOOST_PP_EMPTY() )
-#endif
-*/
 namespace Signals
 {
 	template<class T, template<class> class C> class typed_signal_base;
@@ -70,14 +58,14 @@ namespace Signals
 			auto typed_sig = dynamic_cast<typed_signal_base<T, combiner>*>(sig.get());
 			return typed_sig;
 		}
-		template<typename T, template<class> class combiner = default_combiner> std::shared_ptr<Signals::connection> connect(const std::string& name, std::function<T> f, boost::thread::id destination_thread = boost::this_thread::get_id(), const std::string& receiver_description = "", int line_number = -1, const std::string& filename = "")
+		template<typename T, template<class> class combiner = default_combiner> std::shared_ptr<Signals::connection> connect(const std::string& name, std::function<T> f, size_t destination_thread = get_this_thread(), const std::string& receiver_description = "", int line_number = -1, const std::string& filename = "")
 		{
 			auto sig = get_signal<T, combiner>(name);
 			if (filename.size() && line_number != -1)
 				register_receiver(Loki::TypeInfo(typeid(T)), name, line_number, filename, receiver_description);
 			return sig->connect(f, destination_thread);
 		}
-		template<typename T, typename C> std::shared_ptr<Signals::connection> connect(const std::string& name, std::function<T> f, C* receiver, boost::thread::id destination_thread = boost::this_thread::get_id(), const std::string& receiver_description = "")
+		template<typename T, typename C> std::shared_ptr<Signals::connection> connect(const std::string& name, std::function<T> f, C* receiver, size_t destination_thread = get_this_thread(), const std::string& receiver_description = "")
 		{
 			auto sig = get_signal<T>(name);
 			register_receiver(Loki::TypeInfo(typeid(T)), name, Loki::TypeInfo(typeid(C)), receiver, receiver_description);
@@ -115,35 +103,6 @@ namespace Signals
 
         std::mutex mtx;
     };
-
-    /*class SIGNAL_EXPORTS signal_registery
-    {
-    public:
-        static void register_sender(const std::string& signal_name, Loki::TypeInfo type, void* sender, Loki::TypeInfo signal_signature, signal_manager* mgr = signal_manager::get_instance(), const std::string& description = "");
-		static void register_receiver(const std::string& signal_name, Loki::TypeInfo type, void* receiver, Loki::TypeInfo signal_signature, signal_manager* mgr = signal_manager::get_instance(), const std::string& description = "");
-    };
-
-
-    template<typename T> class SIGNAL_EXPORTS signal_receiver_registerer
-    {
-    public:
-        signal_receiver_registerer(T* This, const std::string& signal_name, Loki::TypeInfo signal_signature, const std::string description)
-        {
-            signal_registery::register_sender(signal_name, Loki::TypeInfo(typeid(T)), (void*)This, signal_signature, description);
-        }
-    };
-    template<typename T> signal_receiver_registerer<T> register_receiver(T* This, const std::string& signal_name, Loki::TypeInfo signal_signature, const std::string description)
-    {
-        return signal_receiver_registerer<T>(This, signal_name, signal_signature, description);
-    }
-    template<typename T> class SIGNAL_EXPORTS signal_sender_registerer
-    {
-    public:
-        signal_sender_registerer(T* This, const std::string& signal_name, Loki::TypeInfo signal_signature)
-        {
-            signal_registery::register_receiver(signal_name, Loki::TypeInfo(typeid(T)), (void*)This, signal_signature);
-        }
-    };*/
     template<typename T> void register_sender(T* This, const std::string& signal_name, Loki::TypeInfo signal_signature, signal_manager* mgr = signal_manager::get_instance(), const std::string& description = "")
     {
 		mgr->register_sender(signal_signature, signal_name, Loki::TypeInfo(typeid(T)), This, description);

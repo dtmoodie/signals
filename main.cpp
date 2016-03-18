@@ -5,6 +5,10 @@
 #include "signals/signal_sink_factory.h"
 #include "signals/signal_with_sink.h"
 #include "signals/thread_registry.h"
+#include "signals/boost_thread.h"
+
+#include <boost/thread.hpp>
+#include <boost/lexical_cast.hpp>
 class connection;
 
 struct test_class
@@ -63,6 +67,11 @@ using namespace Signals;
 int main()
 {
 	{
+        std::thread std_thread([](){ std::cout << std::this_thread::get_id() << " - " << boost::this_thread::get_id();});
+        std_thread.join();
+        std::cout << std::endl;
+        boost::thread boost_thread([](){ std::cout << std::this_thread::get_id() << " - " << boost::this_thread::get_id();});
+        boost_thread.join();
 		BOOST_LOG_TRIVIAL(info) << "Testing sending and receiving of signals on different threads";
 		// Raw signals without a manager or signal registry, similar usage to boost signals
 		Signals::typed_signal_base<void(int, int)> test;
@@ -70,7 +79,8 @@ int main()
 		boost::thread work_thread(std::bind([]()->void{while (!boost::this_thread::interruption_requested()){ Signals::thread_specific_queue::run(); }}));
         
         // Everytime the test signal sends a signal, receive it with the static function "function" on the work thread
-		auto receiver_connection = test.connect(std::bind(&function, std::placeholders::_1, std::placeholders::_2), work_thread.get_id());
+        
+		auto receiver_connection = test.connect(std::bind(&function, std::placeholders::_1, std::placeholders::_2), get_thread_id(work_thread.get_id()));
 		for (int i = 0; i < 5; ++i)
 		{
 			BOOST_LOG_TRIVIAL(info) << "Emitting signal";
@@ -115,7 +125,7 @@ int main()
 		
         // By connecting the signal through the signal manager with corresponding description, line, and file information.  A signal map can be generated so that we know what is sending and receiving a signal
         // The test signaler class automatically registers to the signal manager as a sender of a particular signal.  Currently senders and receivers are not deregistered with disconnection of signals.
-		auto connection = Signals::signal_manager::get_instance()->connect<void(int)>("test1", [](int i)->void{BOOST_LOG_TRIVIAL(info) << "Test sink: " << i; }, boost::this_thread::get_id(), "Test lambda receiver", __LINE__, __FILE__);
+		auto connection = Signals::signal_manager::get_instance()->connect<void(int)>("test1", [](int i)->void{BOOST_LOG_TRIVIAL(info) << "Test sink: " << i; }, get_this_thread(), "Test lambda receiver", __LINE__, __FILE__);
 		//test_signaler1.sig_test10(0, 1, 2, 3, 4, 5, 6, 7, 8, 9);
 		test_signaler2.sig_test1(0);
 	}

@@ -1,13 +1,25 @@
 #include "thread_registry.h"
-
+#include <thread>
+#include <sstream>
 using namespace Signals;
+
+size_t Signals::get_this_thread()
+{
+    std::stringstream ss;
+    ss << std::this_thread::get_id();
+    size_t output;
+    ss >> output;
+    return output;
+}
+
+
 
 thread_registry::thread_registry()
 {
 
 }
 
-void thread_registry::register_thread(int type, boost::thread::id id)
+void thread_registry::register_thread(int type, size_t id)
 {
     std::lock_guard<std::mutex> lock(mtx);
     auto& threads = _thread_map[type];
@@ -15,11 +27,11 @@ void thread_registry::register_thread(int type, boost::thread::id id)
         threads.push_back(id);
 }
 
-boost::thread::id thread_registry::get_thread(int type)
+size_t thread_registry::get_thread(int type)
 {
     std::lock_guard<std::mutex> lock(mtx);
     // TODO some kind of load balancing for multiple threads of a specific type
-    auto current_thread = boost::this_thread::get_id();
+    auto current_thread = get_this_thread();
     auto itr = _thread_map.find(type);
     if (type != 0 && itr != _thread_map.end())
     {

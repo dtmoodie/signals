@@ -1,5 +1,6 @@
 #pragma once
-
+#include <memory>
+#include "connection.h"
 namespace Signals
 {
     class ISignalLogSink

@@ -60,8 +60,8 @@ namespace Signals
 
     template<class R, class...T> struct QueuedChannel<R(T...)> : public Channel<R(T...)>
     {
-        boost::thread::id destination_thread;
-        QueuedChannel(boost::thread::id dest) : destination_thread(dest) {}
+        size_t destination_thread;
+        QueuedChannel(size_t dest) : destination_thread(dest) {}
 
         virtual std::future<R> exec(const std::function<R(T...)>& f, T... args)
         {
@@ -78,8 +78,8 @@ namespace Signals
     };
     template<class...T> struct QueuedChannel<void(T...)> : public Channel<void(T...)>
     {
-        boost::thread::id destination_thread;
-        QueuedChannel(boost::thread::id dest) : destination_thread(dest) {}
+        size_t destination_thread;
+        QueuedChannel(size_t dest) : destination_thread(dest) {}
 
         virtual std::future<void> exec(const std::function<void(T...)>& f, T... args)
         {
