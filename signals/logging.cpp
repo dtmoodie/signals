@@ -4,10 +4,11 @@
 #include <windows.h>
 #include "DbgHelp.h"
 #include <WinBase.h>
+#include <codecvt>
 #endif
 #include <algorithm>
 #include <iostream>
-#include <codecvt>
+
 // https://github.com/Microsoft/CNTK/blob/7c811de9e33d0184fdf340cd79f4f17faacf41cc/Source/Common/ExceptionWithCallStack.cpp
 
 #ifdef _WIN32
@@ -150,12 +151,13 @@ static inline wcstring utf16(const std::wstring& p)
 
     void Signals::collect_callstack(size_t skipLevels, bool makeFunctionNamesStandOut, const std::function<void(const std::string&)>& write)
     {
-        static const int MAX_CALLERS = 62;
-        static const unsigned short MAX_CALL_STACK_DEPTH = 20;
+
 
         write("\n[CALL STACK]\n");
 
 #ifdef _WIN32
+        static const int MAX_CALLERS = 62;
+        static const unsigned short MAX_CALL_STACK_DEPTH = 20;
 
         // RtlCaptureStackBackTrace() is a kernel API without default binding, we must manually determine its function pointer.
         if(RtlCaptureStackBackTrace_func == nullptr)
@@ -246,7 +248,7 @@ static inline wcstring utf16(const std::wstring& p)
                 size_t funcNameSize = MAX_FUNCNAME_SIZE;
                 char funcName[MAX_FUNCNAME_SIZE]; // working buffer
                 const char* ret = abi::__cxa_demangle(beginName, funcName, &funcNameSize, &status);
-                string fName;
+                std::string fName;
                 if (status == 0)
                     fName = makeFunctionNamesStandOut ? MakeFunctionNameStandOut(ret) : ret; // make it a bit more readable
                 else
@@ -259,7 +261,7 @@ static inline wcstring utf16(const std::wstring& p)
                 //    sourceFile = "..." + sourceFile.substr(sourceFile.size() - (sourceFileWidth-3));
                 while (*beginAddress == ' ') // eat unnecessary space
                     beginAddress++;
-                string pcOffset = beginOffset ? string(" + ") + beginOffset : string();
+                std::string pcOffset = beginOffset ? std::string(" + ") + beginOffset : std::string();
                 snprintf(buffer, buf_size, "%-20s%-50s%s\n", beginAddress, fName.c_str(), pcOffset.c_str());
             }
             else // Couldn't parse the line. Print the whole line as it came.

@@ -8,13 +8,14 @@
 #endif
 
 #ifndef signals_EXPORTS
-#ifdef _DEBUG
-#pragma comment(lib, "signalsd.lib")
-#else
-#pragma comment(lib, "signals.lib")
-#endif
-#endif
-
+  #ifdef _MSC_VER
+    #ifdef _DEBUG
+      #pragma comment(lib, "signalsd.lib")
+    #else
+      #pragma comment(lib, "signals.lib")
+    #endif // _DEBUG
+  #endif // _MSC_VER
+#endif // signals_EXPORTS
 namespace Signals
 {
     enum thread_type

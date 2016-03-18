@@ -10,6 +10,11 @@ serialization_proxy_base::serialization_proxy_base()
 {
     _dest = nullptr;
 }
+serialization_proxy_base::~serialization_proxy_base()
+{
+
+}
+
 void serialization_proxy_base::set_output_iostream(std::ostream* stream)
 {
     _dest = stream;

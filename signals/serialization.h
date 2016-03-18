@@ -47,6 +47,7 @@ namespace Signals
                 std::ostream* _dest;
 			public:
                 serialization_proxy_base();
+                virtual ~serialization_proxy_base();
                 virtual void set_output_iostream(std::ostream* stream);
 				virtual void install(signal_base* signal);
 				virtual void send(signal_base* signal, std::string str);
