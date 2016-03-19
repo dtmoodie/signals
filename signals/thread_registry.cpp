@@ -1,6 +1,7 @@
 #include "thread_registry.h"
 #include <thread>
 #include <sstream>
+#include <algorithm>
 using namespace Signals;
 
 size_t Signals::get_this_thread()

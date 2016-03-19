@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 2.8)
 set(CMAKE_DEBUG_POSTFIX "d")
 project(advanced_signals)
 
-find_package(Boost REQUIRED system log log_setup)
+find_package(Boost REQUIRED system log log_setup thread)
   include_directories(${Boost_INCLUDE_DIRS})
   link_directories(${Boost_LIBRARY_DIR_RELEASE})
   link_directories(${Boost_LIBRARY_DIR})
