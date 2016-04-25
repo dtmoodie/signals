@@ -78,7 +78,7 @@ namespace Signals
 		ExceptionWithCallStack(const E& exc, const std::string& callstack) :
 			E(exc), m_callStack(callstack)
 		{ }
-        ExceptionWithCallstack(const E& exc):
+		ExceptionWithCallStack(const E& exc):
             E(exc), m_callstack(print_callstack(0, true))
         {
 

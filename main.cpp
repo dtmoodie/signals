@@ -22,8 +22,7 @@ struct test_class
 
 void function(int x, int y)
 {
-    //std::cout << x << ": " << y << std::endl;
-	BOOST_LOG_TRIVIAL(info) << "Receiving signal " << x << ", " << y;
+	LOG(info) << "Receiving signal " << x << ", " << y;
 }
 
 
@@ -72,7 +71,7 @@ int main()
         std::cout << std::endl;
         boost::thread boost_thread([](){ std::cout << std::this_thread::get_id() << " - " << boost::this_thread::get_id();});
         boost_thread.join();
-		BOOST_LOG_TRIVIAL(info) << "Testing sending and receiving of signals on different threads";
+		LOG(info) << "Testing sending and receiving of signals on different threads";
 		// Raw signals without a manager or signal registry, similar usage to boost signals
 		Signals::typed_signal_base<void(int, int)> test;
         // The work thread runs a simple message receiver loop
@@ -83,7 +82,7 @@ int main()
 		auto receiver_connection = test.connect(std::bind(&function, std::placeholders::_1, std::placeholders::_2), get_thread_id(work_thread.get_id()));
 		for (int i = 0; i < 5; ++i)
 		{
-			BOOST_LOG_TRIVIAL(info) << "Emitting signal";
+			LOG(info) << "Emitting signal";
 			test(i, i + 1); // Send signal on main thread, write out on worker thread
 		}
 
@@ -91,7 +90,7 @@ int main()
         auto proxy = Signals::serialization::text::factory::instance()->get_proxy(&test);
         if(proxy)
         {
-            BOOST_LOG_TRIVIAL(info) << "Serialized sending of signal";
+			LOG(info) << "Serialized sending of signal";
             // Test sending a signal from a text string
             proxy->send(&test, "5 ! 6");
             proxy->install(&test);
@@ -112,20 +111,20 @@ int main()
         // Test serializing a signal to std::cout
         for(int i = 0; i < 5; ++i)
         {
-            BOOST_LOG_TRIVIAL(info) << "Emitting signal, to be auto serialized";
+			LOG(info) << "Emitting signal, to be auto serialized";
             std::cout << "Auto serialized value: "; test(i, i+1);
         }
         delete proxy;
 	}
 
 	{
-		BOOST_LOG_TRIVIAL(info) << "Testing signalling class with signal owned by manager";
+		LOG(info) << "Testing signalling class with signal owned by manager";
 		TestSignalerImpl test_signaler1;
 		TestSignalerImpl test_signaler2;
 		
         // By connecting the signal through the signal manager with corresponding description, line, and file information.  A signal map can be generated so that we know what is sending and receiving a signal
         // The test signaler class automatically registers to the signal manager as a sender of a particular signal.  Currently senders and receivers are not deregistered with disconnection of signals.
-		auto connection = Signals::signal_manager::get_instance()->connect<void(int)>("test1", [](int i)->void{BOOST_LOG_TRIVIAL(info) << "Test sink: " << i; }, get_this_thread(), "Test lambda receiver", __LINE__, __FILE__);
+		auto connection = Signals::signal_manager::get_instance()->connect<void(int)>("test1", [](int i)->void{LOG(info) << "Test sink: " << i; }, get_this_thread(), "Test lambda receiver", __LINE__, __FILE__);
 		//test_signaler1.sig_test10(0, 1, 2, 3, 4, 5, 6, 7, 8, 9);
 		test_signaler2.sig_test1(0);
 	}

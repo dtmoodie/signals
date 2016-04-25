@@ -18,34 +18,32 @@ namespace Signals
 	template<class R, class...T, template<class>class Combiner> class typed_signal_base<R(T...), Combiner> : public signal_base, public meta_signal<R(T...)>
     {
     protected:
-        std::map<int, std::function<R(T...)> >				receivers;
-        std::map<int, std::shared_ptr<Channel<R(T...)>>>	channels;
-		std::map<int, std::shared_ptr<Channel<void(T...)>>> log_channels;
-		std::map<int, std::function<void(T...)> >			log_sinks;
+        std::map<connection*, std::function<R(T...)> >				receivers;
+        std::map<connection*, std::shared_ptr<Channel<R(T...)>>>	channels;
+		std::map<connection*, std::shared_ptr<Channel<void(T...)>>> log_channels;
+		std::map<connection*, std::function<void(T...)> >			log_sinks;
 		std::string											signal_description;
-        std::list<int>										unused_indexes;
+        std::list<connection*>								receiver_connections;
         std::mutex											mtx;
 		
         friend class connection;
-        virtual void remove_receiver(int index)
+        virtual void remove_receiver(connection* connection_)
         {
             std::lock_guard<std::mutex> lock(mtx);
-            auto itr = receivers.find(index);
+            auto itr = receivers.find(connection_);
             if (itr != receivers.end())
             {
-                receivers.erase(index);
-                auto itr2 = channels.find(index);
+                receivers.erase(connection_);
+                auto itr2 = channels.find(connection_);
                 channels.erase(itr2);
-                unused_indexes.push_back(index);
 				return;
             }
-			auto itr2 = log_sinks.find(index);
+			auto itr2 = log_sinks.find(connection_);
 			if (itr2 != log_sinks.end())
 			{
 				log_sinks.erase(itr2);
-				auto chan_itr = log_channels.find(index);
+				auto chan_itr = log_channels.find(connection_);
 				log_channels.erase(chan_itr);
-				unused_indexes.push_back(index);
 				return;
 			}
         }
@@ -53,9 +51,14 @@ namespace Signals
 		typed_signal_base(const std::string& description = "") :
 			signal_description(description)
         {
-			for (int i = 0; i < 256; ++i)
-                unused_indexes.push_back(i);
         }
+		~typed_signal_base()
+		{
+			for (auto itr : receiver_connections)
+			{
+				itr->set_parent(nullptr);
+			}
+		}
         virtual void add_log_sink(std::shared_ptr<signal_sink_base> sink, size_t destination_thread = get_this_thread())
         {
             auto typed_sink = std::dynamic_pointer_cast<signal_sink<R(T...)>>(sink);
@@ -68,44 +71,44 @@ namespace Signals
 		std::shared_ptr<connection> connect(const std::function<R(T...)>& f, size_t destination_thread = get_this_thread(), bool force_queue = false)
         {
             std::lock_guard<std::mutex> lock(mtx);
-            int index = unused_indexes.back();
-            unused_indexes.pop_back();
-            receivers[index] = f;
+			std::shared_ptr<connection> connection_(new connection(this));
+			receiver_connections.push_back(connection_.get());
+            receivers[connection_.get()] = f;
             if (destination_thread != get_this_thread() || force_queue)
-                channels[index] = std::shared_ptr<Channel<R(T...)>>(new QueuedChannel<R(T...)>(destination_thread));
+                channels[connection_.get()] = std::shared_ptr<Channel<R(T...)>>(new QueuedChannel<R(T...)>(destination_thread));
             else
-                channels[index] = std::shared_ptr<Channel<R(T...)>>(new Channel<R(T...)>());
-            return std::shared_ptr<connection>(new connection(index, this));
+                channels[connection_.get()] = std::shared_ptr<Channel<R(T...)>>(new Channel<R(T...)>());
+			return connection_;
         }
 
 		std::shared_ptr<connection> connect_log_sink(const std::function<void(T...)>& f, size_t destination_thread = get_this_thread())
 		{
 			std::lock_guard<std::mutex> lock(mtx);
-			int index = unused_indexes.back();
-			unused_indexes.pop_back();
-			log_sinks[index] = f;
+			std::shared_ptr<connection> connection_(new connection(this));
+			receiver_connections.push_back(connection_.get());
+			log_sinks[connection_.get()] = f;
 			if (destination_thread != get_this_thread())
-				log_channels[index] = std::shared_ptr<Channel<void(T...)>>(new QueuedChannel<void(T...)>(destination_thread));
+				log_channels[connection_.get()] = std::shared_ptr<Channel<void(T...)>>(new QueuedChannel<void(T...)>(destination_thread));
 			else
-				log_channels[index] = std::shared_ptr<Channel<void(T...)>>(new Channel<void(T...)>());
+				log_channels[connection_.get()] = std::shared_ptr<Channel<void(T...)>>(new Channel<void(T...)>());
 
-			return std::shared_ptr<connection>(new connection(index, this));
+			return connection_;
 		}
 
         std::shared_ptr<connection> connect(const std::function<R(T...)>& f, int dest_thread_type, bool force_queued = false)
         {
             std::lock_guard<std::mutex> lock(mtx);
-            int index = unused_indexes.back();
-            unused_indexes.pop_back();
-            receivers[index] = f;
+			std::shared_ptr<connection> connection_(new connection(this));
+			receiver_connections.push_back(connection_.get());
+            receivers[connection_.get()] = f;
             auto destination_thread = thread_registry::get_instance()->get_thread(dest_thread_type);
 
             if (destination_thread != get_this_thread() || force_queued)
-                channels[index] = std::shared_ptr<Channel<R(T...)>>(new QueuedChannel<R(T...)>(destination_thread));
+                channels[connection_.get()] = std::shared_ptr<Channel<R(T...)>>(new QueuedChannel<R(T...)>(destination_thread));
             else
-                channels[index] = std::shared_ptr<Channel<R(T...)>>(new Channel<R(T...)>());
+                channels[connection_.get()] = std::shared_ptr<Channel<R(T...)>>(new Channel<R(T...)>());
 
-            return std::shared_ptr<connection>(new connection(index, this));
+			return connection_;
         }
 
 		//Combiner<typename boost::function_traits<R(T...)>::result_type> operator()(T... args)
