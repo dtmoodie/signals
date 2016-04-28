@@ -78,11 +78,7 @@ namespace Signals
 		ExceptionWithCallStack(const E& exc, const std::string& callstack) :
 			E(exc), m_callStack(callstack)
 		{ }
-        ExceptionWithCallstack(const E& exc):
-            E(exc), m_callstack(print_callstack(0, true))
-        {
-
-        }
+        
 		virtual const char * CallStack() const override { return m_callStack.c_str(); }
 
 	protected:
