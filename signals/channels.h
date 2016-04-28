@@ -80,16 +80,18 @@ namespace Signals
     {
         size_t destination_thread;
         QueuedChannel(size_t dest) : destination_thread(dest) {}
-
+		~QueuedChannel()
+		{
+			thread_specific_queue::remove_from_queue(this);
+		}
         virtual std::future<void> exec(const std::function<void(T...)>& f, T... args)
         {
             std::shared_ptr<executor<void,T...>> exec(new executor<void, T...>());
 
-            //thread_specific_queue::push(std::bind(&executor<void, T...>::exec_on_thread, exec, f, args...), destination_thread);
             thread_specific_queue::push(std::bind([f, exec](T... args_)->void
             {
                 exec->exec_on_thread(f, args_...);
-            }, args...), destination_thread);
+            }, args...), destination_thread, this);
 
             return exec->promise.get_future();
         }

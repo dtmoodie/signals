@@ -2,17 +2,9 @@
 #include "Defs.h"
 
 #include <memory>
-
+#include <boost/signals2/connection.hpp>
 namespace Signals
 {
-    class signal_base;
-    class SIGNAL_EXPORTS connection
-    {
-        int _index;
-        signal_base* _parent;
-    public:
-		typedef std::shared_ptr<connection> Ptr;
-        connection(int index, signal_base* parent);
-        ~connection();
-    };
+    typedef boost::signals2::scoped_connection connection;
+    
 } // namespace Signals

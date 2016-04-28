@@ -1,11 +1,12 @@
 #pragma once
 #include "Defs.h"
+#include "connection.h"
 #include <memory>
-//#include "signal.h"
+
 
 namespace Signals
 {
-    class connection;
+    
 
     class SIGNAL_EXPORTS signal_sink_base
     {

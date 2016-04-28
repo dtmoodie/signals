@@ -128,12 +128,12 @@ void signal_manager::print_signal_map()
 /*
 void signal_registery::register_sender(const std::string& signal_name, Loki::TypeInfo type, void* sender, Loki::TypeInfo signal_signature, signal_manager* mgr, const std::string& desc)
 {
-	BOOST_LOG_TRIVIAL(debug) << "Registering signal emitter " << type.name() << " of signal " << signal_name << " with signature " << signal_signature.name();
+	BOOST_LOG(debug) << "Registering signal emitter " << type.name() << " of signal " << signal_name << " with signature " << signal_signature.name();
 	mgr->register_sender(signal_signature, signal_name, type, sender);
 }
 void signal_registery::register_receiver(const std::string& signal_name, Loki::TypeInfo type, void* receiver, Loki::TypeInfo signal_signature, signal_manager* mgr, const std::string& desc)
 {
-	BOOST_LOG_TRIVIAL(debug) << "Registering signal receiver " << type.name() << " of signal " << signal_name << " with signature " << signal_signature.name();
+	BOOST_LOG(debug) << "Registering signal receiver " << type.name() << " of signal " << signal_name << " with signature " << signal_signature.name();
 	mgr->register_receiver(signal_signature, signal_name, type, receiver);
 }
 */
