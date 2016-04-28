@@ -24,12 +24,14 @@ namespace Signals
 		std::map<connection*, std::function<void(T...)> >			log_sinks;
 		std::string											signal_description;
         std::list<connection*>								receiver_connections;
-        std::mutex											mtx;
+        std::recursive_mutex								mtx;
+		// Identifier for thread that will be sending signals
+		size_t												owning_thread; 
 		
         friend class connection;
         virtual void remove_receiver(connection* connection_)
         {
-            std::lock_guard<std::mutex> lock(mtx);
+            std::lock_guard<std::recursive_mutex> lock(mtx);
             auto itr = receivers.find(connection_);
             if (itr != receivers.end())
             {
@@ -48,8 +50,9 @@ namespace Signals
 			}
         }
     public:
-		typed_signal_base(const std::string& description = "") :
-			signal_description(description)
+		typed_signal_base(const std::string& description = "", size_t owning_thread_ = get_this_thread()) :
+			signal_description(description),
+			owning_thread(owning_thread_)
         {
         }
 		~typed_signal_base()
@@ -70,7 +73,7 @@ namespace Signals
 
 		std::shared_ptr<connection> connect(const std::function<R(T...)>& f, size_t destination_thread = get_this_thread(), bool force_queue = false)
         {
-            std::lock_guard<std::mutex> lock(mtx);
+            std::lock_guard<std::recursive_mutex> lock(mtx);
 			std::shared_ptr<connection> connection_(new connection(this));
 			receiver_connections.push_back(connection_.get());
             receivers[connection_.get()] = f;
@@ -83,7 +86,7 @@ namespace Signals
 
 		std::shared_ptr<connection> connect_log_sink(const std::function<void(T...)>& f, size_t destination_thread = get_this_thread())
 		{
-			std::lock_guard<std::mutex> lock(mtx);
+			std::lock_guard<std::recursive_mutex> lock(mtx);
 			std::shared_ptr<connection> connection_(new connection(this));
 			receiver_connections.push_back(connection_.get());
 			log_sinks[connection_.get()] = f;
@@ -97,7 +100,7 @@ namespace Signals
 
         std::shared_ptr<connection> connect(const std::function<R(T...)>& f, int dest_thread_type, bool force_queued = false)
         {
-            std::lock_guard<std::mutex> lock(mtx);
+            std::lock_guard<std::recursive_mutex> lock(mtx);
 			std::shared_ptr<connection> connection_(new connection(this));
 			receiver_connections.push_back(connection_.get());
             receivers[connection_.get()] = f;
@@ -114,7 +117,7 @@ namespace Signals
 		//Combiner<typename boost::function_traits<R(T...)>::result_type> operator()(T... args)
         Combiner<R> operator()(T... args)
         {
-            std::lock_guard<std::mutex> lock(mtx); // Lock against adding new connections while executing
+            std::lock_guard<std::recursive_mutex> lock(mtx); // Lock against adding new connections while executing
 			//Combiner<typename boost::function_traits<R(T...)>::result_type> combiner;
             Combiner<R> combiner;
             for(auto& itr : log_sinks)
