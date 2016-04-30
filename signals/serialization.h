@@ -26,15 +26,14 @@ struct gens<0, S...> {
 namespace Signals
 {
     class signal_base;
-    template<class Signature,
-    template<class> class Combiner = default_combiner
+    template<class Signature
     > class typed_signal_base { };
 	template<class T, template<class> class C, template<class...> class S> class typed_signal;
 
 	namespace serialization
 	{
-        template<int ...S, class R, class ... T, template<class> class C>
-          void call_signal(seq<S...>, std::tuple<T...>& params, Signals::typed_signal_base<R(T...), C>* sig) 
+        template<int ...S, class R, class ... T>
+          void call_signal(seq<S...>, std::tuple<T...>& params, Signals::typed_signal_base<R(T...)>* sig) 
           {
               (*sig)(std::get<S>(params)...);
           }
@@ -188,7 +187,7 @@ namespace Signals
 			public:
 				void install(signal_base* signal)
 				{
-                    auto typed_sig = dynamic_cast<typed_signal_base<R(T...), default_combiner>*>(signal);
+                    auto typed_sig = dynamic_cast<typed_signal_base<R(T...)>*>(signal);
                     if(typed_sig)
                     {
                         _connection = typed_sig->connect_log_sink(my_bind(&serialization_proxy<void(T...)>::receive, this,  make_int_sequence<sizeof...(T)>{}));
@@ -196,7 +195,7 @@ namespace Signals
 				}
 				void send(signal_base* signal, std::string str)
 				{
-                    auto typed_sig = dynamic_cast<typed_signal_base<R(T...), default_combiner>*>(signal);
+                    auto typed_sig = dynamic_cast<typed_signal_base<R(T...)>*>(signal);
 					if (typed_sig)
 					{
 						std::stringstream ss;
@@ -221,7 +220,7 @@ namespace Signals
             public:
 				void install(signal_base* signal)
 				{
-                    auto typed_sig = dynamic_cast<typed_signal_base<R(), default_combiner>*>(signal);
+                    auto typed_sig = dynamic_cast<typed_signal_base<R()>*>(signal);
                     if(typed_sig)
                     {
                         _connection = typed_sig->connect_log_sink(std::bind(&serialization_proxy<R()>::receive, this));
@@ -229,7 +228,7 @@ namespace Signals
 				}
 				void send(signal_base* signal, std::string str)
 				{
-                    auto typed_sig = dynamic_cast<typed_signal_base<R(), default_combiner>*>(signal);
+                    auto typed_sig = dynamic_cast<typed_signal_base<R()>*>(signal);
 					if (typed_sig)
 					{
 						(*typed_sig)();

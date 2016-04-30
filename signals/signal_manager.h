@@ -18,9 +18,8 @@
 
 namespace Signals
 {
-	template<class T, template<class> class C> class typed_signal_base;
-	template<class T, template<class> class C, template<class...> class S> class typed_signal;
-
+	template<class T> class typed_signal_base;
+	class signaler;
     class SIGNAL_EXPORTS signal_manager
     {
     public:
@@ -28,39 +27,40 @@ namespace Signals
         static signal_manager* get_instance();
         static void set_instance(signal_manager* inst);
 
-		template<typename T, template<class> class combiner = default_combiner, template<class...> class Sink = signal_sink> typed_signal_base<T, combiner>* get_signal(const std::string& name, const std::string& description = "", std::string file_name = "", int line_number = -1)
+		template<typename T, template<class...> class Sink = signal_sink> typed_signal_base<T>* get_signal(const std::string& name, const std::string& description = "", std::string file_name = "", int line_number = -1)
         {
             std::lock_guard<std::mutex> lock(mtx);
 			if (line_number != -1 && file_name.size())
 				register_sender(Loki::TypeInfo(typeid(T)), name, description, file_name, line_number);
-			auto signature = Loki::TypeInfo(typeid(typed_signal_base<T, combiner>));
+			auto signature = Loki::TypeInfo(typeid(typed_signal_base<T>));
             auto&sig = get_signal(name, signature);
 			if (!sig)
 			{
 				LOG(debug) << this << " Creating signal " << name << " <" << signature.name() << ">";
-				sig.reset(new typed_signal<T, combiner, Sink>(description));
+				static sink_constructor<T, Sink<T>> sink_constructor;
+				sig.reset(new typed_signal_base<T>(description));
 			}
-            return std::dynamic_pointer_cast<typed_signal_base<T, combiner>>(sig).get();
+            return std::dynamic_pointer_cast<typed_signal_base<T>>(sig).get();
         }
-		template<typename T, template<class> class combiner = default_combiner, template<class...> class Sink = signal_sink, class C> typed_signal_base<T, combiner>* get_signal(const std::string& name, C* This, const std::string& description = "")
+		template<typename T, template<class...> class Sink = signal_sink, class C> typed_signal_base<T>* get_signal(const std::string& name, C* This, const std::string& description = "")
 		{
 			std::lock_guard<std::mutex> lock(mtx);
 			register_sender(Loki::TypeInfo(typeid(T)), name, Loki::TypeInfo(typeid(C)), This, description);
-			auto signature = Loki::TypeInfo(typeid(typed_signal_base<T, combiner>));
+			auto signature = Loki::TypeInfo(typeid(typed_signal_base<T>));
 			auto&sig = get_signal(name, signature);
 			if (!sig)
 			{
 				static sink_constructor<T, Sink<T>> sink_constructor;
 				LOG(debug) << this << " Creating signal " << name << " <" << signature.name() << ">";
-				sig.reset(new typed_signal_base<T, combiner>(description));
+				sig.reset(new typed_signal_base<T>(description));
 			}
 				
-			auto typed_sig = dynamic_cast<typed_signal_base<T, combiner>*>(sig.get());
+			auto typed_sig = dynamic_cast<typed_signal_base<T>*>(sig.get());
 			return typed_sig;
 		}
-		template<typename T, template<class> class combiner = default_combiner> std::shared_ptr<Signals::connection> connect(const std::string& name, std::function<T> f, size_t destination_thread = get_this_thread(), const std::string& receiver_description = "", int line_number = -1, const std::string& filename = "")
+		template<typename T> std::shared_ptr<Signals::connection> connect(const std::string& name, std::function<T> f, size_t destination_thread = get_this_thread(), const std::string& receiver_description = "", int line_number = -1, const std::string& filename = "")
 		{
-			auto sig = get_signal<T, combiner>(name);
+			auto sig = get_signal<T>(name);
 			if (filename.size() && line_number != -1)
 				register_receiver(Loki::TypeInfo(typeid(T)), name, line_number, filename, receiver_description);
 			return sig->connect(f, destination_thread);
@@ -72,7 +72,12 @@ namespace Signals
 			return sig->connect(f, destination_thread);
 		}
 		void register_sender(Loki::TypeInfo signal_signature, std::string signal_name, Loki::TypeInfo sender_type, void* sender_ptr, std::string desc);
+		void register_sender(Loki::TypeInfo signal_signature, std::string signal_name, Loki::TypeInfo sender_type, signaler* sender_ptr);
 		void register_sender(Loki::TypeInfo signal_signature, std::string signal_name, std::string desc, std::string file_name, int line_number);
+
+		void remove_sender(void* sender_ptr);
+		void remove_sender(std::string file_name, int line_number);
+
 		void register_receiver(Loki::TypeInfo signal_signature, std::string signal_name, Loki::TypeInfo receiver_type, void* receiver_ptr, std::string desc);
 		void register_receiver(Loki::TypeInfo signal_signature, std::string signal_name, int line_number, std::string file_name, std::string desc);
 

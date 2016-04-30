@@ -29,16 +29,18 @@ void function(int x, int y)
 class TestSignalerImpl: public Signals::signaler
 {
 public:
-    SIG_DEF(test1, int);
-    SIG_DEF(test2, int, int);
-    SIG_DEF(test3, int, int, double);
-	SIG_DEF(test4, int, int, double, int);
-	SIG_DEF(test5, int, int, double, double, double);
-	SIG_DEF(test6, int, int, int, int, int, int);
-	SIG_DEF(test7, int, int, int, int, int, int, int);
-	SIG_DEF(test8, int, int, int, int, int, int, int, int);
-	SIG_DEF(test9, int, int, int, int, int, int, int, int, int);
-	SIG_DEF(test10, int, int, int, int, int, int, int, int, int, int);
+	SIGNALS_BEGIN;
+	SIG_SEND(test1, int);
+	SIG_SEND(test2, int, int);
+	SIG_SEND(test3, int, int, double);
+	SIG_SEND(test4, int, int, double, int);
+	SIG_SEND(test5, int, int, double, double, double);
+	SIG_SEND(test6, int, int, int, int, int, int);
+	SIG_SEND(test7, int, int, int, int, int, int, int);
+	SIG_SEND(test8, int, int, int, int, int, int, int, int);
+	SIG_SEND(test9, int, int, int, int, int, int, int, int, int);
+	
+	SIGNALS_END
 };
 
 template<class...T> class log_sink : public Signals::signal_sink<T...>
@@ -122,7 +124,8 @@ int main()
         // The test signaler class automatically registers to the signal manager as a sender of a particular signal.  Currently senders and receivers are not deregistered with disconnection of signals.
 		auto connection = Signals::signal_manager::get_instance()->connect<void(int)>("test1", [](int i)->void{LOG(info) << "Test sink: " << i; }, get_this_thread(), "Test lambda receiver", __LINE__, __FILE__);
 		//test_signaler1.sig_test10(0, 1, 2, 3, 4, 5, 6, 7, 8, 9);
-		test_signaler2.sig_test1(0);
+		int val = 0;
+		test_signaler2.sig_test1(val);
 	}
 	Signals::signal_manager::get_instance()->print_signal_map();
 	{

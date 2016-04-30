@@ -15,23 +15,19 @@
 #include <list>
 namespace Signals
 {
-	template<class R, class...T, template<class>class Combiner> class typed_signal_base<R(T...), Combiner> : public signal_base, public meta_signal<R(T...)>, public boost::signals2::signal<R(T...)>
+	template<class R, class...T> class typed_signal_base<R(T...)> : public signal_base, public meta_signal<R(T...)>, public boost::signals2::signal<R(T...)>
     {
     protected:
-        size_t _owning_thread;
-        std::string _signal_description;
     public:
 		typed_signal_base(const std::string& description = "", size_t owning_thread_ = get_this_thread()) :
-			_signal_description(description),
-			_owning_thread(owning_thread_)
+			signal_base(description, owning_thread_)
         {
         }
 		~typed_signal_base()
 		{
 		}
         virtual void add_log_sink(std::shared_ptr<signal_sink_base> sink, size_t destination_thread = get_this_thread())
-        {
-            
+        {            
         }
 
 		std::shared_ptr<connection> connect(const std::function<R(T...)>& f, size_t destination_thread = get_this_thread(), bool force_queue = false)
@@ -63,8 +59,6 @@ namespace Signals
         {
             return connect(f);
         }
-
-		//Combiner<typename boost::function_traits<R(T...)>::result_type> operator()(T... args)
         void operator()(T... args)
         {
             boost::signals2::signal<R(T...)>::operator()(args...);
@@ -74,17 +68,14 @@ namespace Signals
             return Loki::TypeInfo(typeid(R(T...)));
         }
     };
-	template<class Signature,
-		template<class> class Combiner = default_combiner,
-		template<class...>class Sink = signal_sink
-	> class typed_signal : public typed_signal_base<Signature, Combiner>{ };
+	/*template<class Signature, template<class...>class Sink = signal_sink> class typed_signal : public typed_signal_base<Signature>{ };
 
-    template<class R, class...T, template<class>class Combiner, template<class...>class Sink> class typed_signal<R(T...), Combiner, Sink> : public typed_signal_base<R(T...), Combiner>
+    template<class R, class...T, template<class...> class Sink> class typed_signal<R(T...), Sink> : public typed_signal_base<R(T...)>
 	{
 	public:
-		static sink_constructor<R(T...), Sink<R(T...)>> _sink_constructor;
 		typed_signal(const std::string& description = ""):
-			typed_signal_base<R(T...), Combiner>(description)
+		static sink_constructor<R(T...), Sink<R(T...)>> _sink_constructor;
+			typed_signal_base<R(T...)>(description)
 		{
 			(void)&_sink_constructor;
 		}
@@ -93,5 +84,5 @@ namespace Signals
 	template<class R, class...T, 
         template<class> class Combiner,
         template<class...> class Sink>
-    sink_constructor<R(T...), Sink<R(T...)>> typed_signal<R(T...), Combiner, Sink>::_sink_constructor;
+    sink_constructor<R(T...), Sink<R(T...)>> typed_signal<R(T...), Sink>::_sink_constructor;*/
 }

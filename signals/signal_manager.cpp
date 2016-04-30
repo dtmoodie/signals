@@ -1,6 +1,6 @@
 #include "signal_manager.h"
 #include "logging.hpp"
-
+#include "signaler.h"
 using namespace Signals;
 
 signal_manager::signal_manager()
@@ -28,6 +28,10 @@ std::shared_ptr<signal_base>& signal_manager::get_signal(const std::string& name
 {
     return _signals[type][name];
 }
+void signal_manager::register_sender(Loki::TypeInfo signal_signature, std::string signal_name, Loki::TypeInfo sender_type, signaler* sender_ptr)
+{
+	_registered_sender_objects[signal_signature][signal_name].push_back(std::make_tuple(sender_type, sender_ptr, sender_ptr->get_description()));
+}
 void signal_manager::register_sender(Loki::TypeInfo signal_signature, std::string signal_name, Loki::TypeInfo sender_type, void* sender_ptr, std::string desc)
 {
 	_registered_sender_objects[signal_signature][signal_name].push_back(std::make_tuple(sender_type, sender_ptr, desc));
@@ -36,6 +40,15 @@ void signal_manager::register_sender(Loki::TypeInfo signal_signature, std::strin
 {
 	_registered_senders[signal_signature][signal_name].push_back(std::make_tuple(line_number, file_name, desc));
 }
+void signal_manager::remove_sender(void* sender_ptr)
+{
+
+}
+void signal_manager::remove_sender(std::string file_name, int line_number)
+{
+
+}
+
 void signal_manager::register_receiver(Loki::TypeInfo signal_signature, std::string signal_name, Loki::TypeInfo receiver_type, void* receiver_ptr, std::string desc)
 {
 	_registered_receiver_objects[signal_signature][signal_name].push_back(std::make_tuple(receiver_type, receiver_ptr, desc));
