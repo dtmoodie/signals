@@ -26,8 +26,8 @@ struct gens<0, S...> {
 namespace Signals
 {
     class signal_base;
-    template<class Signature
-    > class typed_signal_base { };
+    template<class Sig> class typed_signal_base;
+
 	template<class T, template<class> class C, template<class...> class S> class typed_signal;
 
 	namespace serialization

@@ -18,7 +18,7 @@
 
 namespace Signals
 {
-	template<class T> class typed_signal_base;
+    template<class Sig> class typed_signal_base;
 	class signaler;
     class SIGNAL_EXPORTS signal_manager
     {

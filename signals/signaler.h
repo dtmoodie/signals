@@ -148,11 +148,11 @@ inline void sig_##name(ARG1 arg1, ARG2 arg2, ARG3 arg3, ARG4 arg4, ARG5 arg5, AR
     (*_sig_##name)(arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10); \
 }
 #define SIGNALS_BEGIN \
-template<int N> struct signal_registerer \
+template<int N, typename DUMMY> struct signal_registerer \
 { \
 	template<class C> static void Register(C* obj, manager* _sig_manager) {} \
 }; \
-template<> struct signal_registerer<__COUNTER__> \
+template<typename DUMMY> struct signal_registerer<__COUNTER__, DUMMY> \
 { \
 	template<class C> static void Register(C* obj, manager* _sig_manager) {} \
 };
@@ -167,7 +167,7 @@ inline void sig_##name()\
 	} \
 	(*_sig_##name)(); \
 } \
-template<> struct signal_registerer<N> \
+template<typename DUMMY> struct signal_registerer<N, DUMMY> \
 { \
 	template<class C> static void Register(C* obj, manager* _sig_manager) \
 	{ \
@@ -187,34 +187,34 @@ inline void sig_##name(ARG1& arg1)\
 	} \
 	(*_sig_##name)(arg1); \
 } \
-template<> struct signal_registerer<N> \
+template<typename DUMMY> struct signal_registerer<N, DUMMY> \
 { \
 	template<class C> static void Register(C* obj, manager* _sig_manager) \
 	{ \
 		Signals::register_sender(obj, #name, Loki::TypeInfo(typeid(void(ARG1))), _sig_manager); \
 		_sig_manager->get_signal<void(ARG1)>(#name, obj); \
-		signal_registerer<N-1>::Register(obj, _sig_manager); \
+        signal_registerer<N-1, DUMMY>::Register(obj, _sig_manager); \
 	} \
 };
 
 #define SIGNAL_3(name, ARG1, ARG2,  N) \
-Signals::typed_signal_base<void(ARG1, ARG2)>* _sig_##name = nullptr; \
+Signals::typed_signal_base<void(ARG1, ARG2)>* _sig_##name; \
 inline void sig_##name(ARG1& arg1, ARG2& arg2)\
 {\
 	if(!_sig_manager) _sig_manager = manager::get_instance(); \
 	if(_sig_##name == nullptr)\
 	{ \
-		_sig_##name = _sig_manager->get_signal<void(ARG1, ARG2)>(#name, this); \
+        _sig_##name = _sig_manager->get_signal<void(ARG1, ARG2)>(#name, this); \
 	} \
 	(*_sig_##name)(arg1, arg2); \
 } \
-template<> struct signal_registerer<N> \
+template<typename DUMMY> struct signal_registerer<N, DUMMY> \
 { \
 	template<class C> static void Register(C* obj, manager* _sig_manager) \
 	{ \
 		Signals::register_sender(obj, #name, Loki::TypeInfo(typeid(void(ARG1, ARG2))), _sig_manager); \
-		_sig_##name = _sig_manager->get_signal<void(ARG1, ARG2)>(#name, obj); \
-		signal_registerer<N-1>::Register(obj, _sig_manager); \
+        obj->_sig_##name = _sig_manager->get_signal<void(ARG1, ARG2)>(#name, obj); \
+        signal_registerer<N-1, DUMMY>::Register(obj, _sig_manager); \
 	} \
 };
 
@@ -225,38 +225,38 @@ inline void sig_##name(ARG1& arg1, ARG2& arg2, ARG3& arg3)\
 	if(!_sig_manager) _sig_manager = manager::get_instance(); \
 	if(_sig_##name == nullptr)\
 	{ \
-		_sig_##name = _sig_manager->get_signal<void(ARG1, ARG2, ARG3)>(#name, this); \
+        _sig_##name = _sig_manager->get_signal<void(ARG1, ARG2, ARG3)>(#name, this); \
 	} \
 	(*_sig_##name)(arg1, arg2, arg3); \
 } \
-template<> struct signal_registerer<N> \
+template<typename DUMMY> struct signal_registerer<N, DUMMY> \
 { \
 	template<class C> static void Register(C* obj, manager* _sig_manager) \
 	{ \
 		Signals::register_sender(obj, #name, Loki::TypeInfo(typeid(void(ARG1, ARG2, ARG3))), _sig_manager); \
-		_sig_##name = _sig_manager->get_signal<void(ARG1, ARG2, ARG3)>(#name, obj); \
-		signal_registerer<N-1>::Register(obj, _sig_manager); \
+        obj->_sig_##name = _sig_manager->get_signal<void(ARG1, ARG2, ARG3)>(#name, obj); \
+        signal_registerer<N-1, DUMMY>::Register(obj, _sig_manager); \
 	} \
 };
 
 #define SIGNAL_5(name, ARG1, ARG2, ARG3, ARG4, N) \
-Signals::typed_signal_base<void(ARG1, ARG2, ARG3, ARG4)>* _sig_##name = nullptr; \
+Signals::typed_signal_base<void(ARG1, ARG2, ARG3, ARG4)>* _sig_##name; \
 inline void sig_##name(ARG1& arg1, ARG2& arg2, ARG3& arg3, ARG4& arg4)\
 {\
 	if(!_sig_manager) _sig_manager = manager::get_instance(); \
 	if(_sig_##name == nullptr)\
 	{ \
-		_sig_##name = _sig_manager->get_signal<void(ARG1, ARG2, ARG3, ARG4)>(#name, this); \
+        _sig_##name = _sig_manager->get_signal<void(ARG1, ARG2, ARG3, ARG4)>(#name, this); \
 	} \
 	(*_sig_##name)(arg1, arg2, arg3, arg4); \
 } \
-template<> struct signal_registerer<N> \
+template<typename DUMMY> struct signal_registerer<N, DUMMY> \
 { \
 	template<class C> static void Register(C* obj, manager* _sig_manager) \
 	{ \
 		Signals::register_sender(obj, #name, Loki::TypeInfo(typeid(void(ARG1, ARG2, ARG3, ARG4))), _sig_manager); \
-		_sig_##name = _sig_manager->get_signal<void(ARG1, ARG2, ARG3, ARG4)>(#name, obj); \
-		signal_registerer<N-1>::Register(obj, _sig_manager); \
+        obj->_sig_##name = _sig_manager->get_signal<void(ARG1, ARG2, ARG3, ARG4)>(#name, obj); \
+        signal_registerer<N-1, DUMMY>::Register(obj, _sig_manager); \
 	} \
 };
 
@@ -271,13 +271,13 @@ inline void sig_##name(ARG1& arg1, ARG2& arg2, ARG3& arg3, ARG4& arg4, ARG5& arg
 	} \
 	(*_sig_##name)(arg1, arg2, arg3, arg4, arg5); \
 } \
-template<> struct signal_registerer<N> \
+template<typename DUMMY> struct signal_registerer<N, DUMMY> \
 { \
 	template<class C> static void Register(C* obj, manager* _sig_manager) \
 	{ \
 		Signals::register_sender(obj, #name, Loki::TypeInfo(typeid(void(ARG1, ARG2, ARG3, ARG4, ARG5))), _sig_manager); \
-		_sig_##name = _sig_manager->get_signal<void(ARG1, ARG2, ARG3, ARG4, ARG5)>(#name, obj); \
-		signal_registerer<N-1>::Register(obj, _sig_manager); \
+        obj->_sig_##name = _sig_manager->get_signal<void(ARG1, ARG2, ARG3, ARG4, ARG5)>(#name, obj); \
+        signal_registerer<N-1, DUMMY>::Register(obj, _sig_manager); \
 	} \
 };
 
@@ -288,17 +288,17 @@ inline void sig_##name(ARG1& arg1, ARG2& arg2, ARG3& arg3, ARG4& arg4, ARG5& arg
 	if(!_sig_manager) _sig_manager = manager::get_instance(); \
 	if(_sig_##name == nullptr)\
 	{ \
-		_sig_##name = _sig_manager->get_signal<void(ARG1, ARG2, ARG3, ARG4, ARG5, ARG6)>(#name, this); \
+        _sig_##name = _sig_manager->get_signal<void(ARG1, ARG2, ARG3, ARG4, ARG5, ARG6)>(#name, this); \
 	} \
 	(*_sig_##name)(arg1, arg2, arg3, arg4, arg5, arg6); \
 } \
-template<> struct signal_registerer<N> \
+template<typename DUMMY> struct signal_registerer<N, DUMMY> \
 { \
 	template<class C> static void Register(C* obj, manager* _sig_manager) \
 	{ \
 		Signals::register_sender(obj, #name, Loki::TypeInfo(typeid(void(ARG1, ARG2, ARG3, ARG4, ARG5, ARG6))), _sig_manager); \
-		_sig_##name = _sig_manager->get_signal<void(ARG1, ARG2, ARG3, ARG4, ARG5, ARG6)>(#name, obj); \
-		signal_registerer<N-1>::Register(obj, _sig_manager); \
+        obj->_sig_##name = _sig_manager->get_signal<void(ARG1, ARG2, ARG3, ARG4, ARG5, ARG6)>(#name, obj); \
+        signal_registerer<N-1, DUMMY>::Register(obj, _sig_manager); \
 	} \
 };
 
@@ -309,17 +309,17 @@ inline void sig_##name(ARG1& arg1, ARG2& arg2, ARG3& arg3, ARG4& arg4, ARG5& arg
 	if(!_sig_manager) _sig_manager = manager::get_instance(); \
 	if(_sig_##name == nullptr)\
 	{ \
-		_sig_##name = _sig_manager->get_signal<void(ARG1, ARG2, ARG3, ARG4, ARG5, ARG6, ARG7)>(#name, this); \
+        _sig_##name = _sig_manager->get_signal<void(ARG1, ARG2, ARG3, ARG4, ARG5, ARG6, ARG7)>(#name, this); \
 	} \
 	(*_sig_##name)(arg1, arg2, arg3, arg4, arg5, arg6, arg7); \
 } \
-template<> struct signal_registerer<N> \
+template<typename DUMMY> struct signal_registerer<N, DUMMY> \
 { \
 	template<class C> static void Register(C* obj, manager* _sig_manager) \
 	{ \
 		Signals::register_sender(obj, #name, Loki::TypeInfo(typeid(void(ARG1, ARG2, ARG3, ARG4, ARG5, ARG6, ARG7))), _sig_manager); \
-		_sig_##name = _sig_manager->get_signal<void(ARG1, ARG2, ARG3, ARG4, ARG5, ARG6, ARG7)>(#name, obj); \
-		signal_registerer<N-1>::Register(obj, _sig_manager); \
+        obj->_sig_##name = _sig_manager->get_signal<void(ARG1, ARG2, ARG3, ARG4, ARG5, ARG6, ARG7)>(#name, obj); \
+        signal_registerer<N-1, DUMMY>::Register(obj, _sig_manager); \
 	} \
 };
 
@@ -330,17 +330,17 @@ inline void sig_##name(ARG1& arg1, ARG2& arg2, ARG3& arg3, ARG4& arg4, ARG5& arg
 	if(!_sig_manager) _sig_manager = manager::get_instance(); \
 	if(_sig_##name == nullptr)\
 	{ \
-		_sig_##name = _sig_manager->get_signal<void(ARG1, ARG2, ARG3, ARG4, ARG5, ARG6, ARG7, ARG8)>(#name, this); \
+        _sig_##name = _sig_manager->get_signal<void(ARG1, ARG2, ARG3, ARG4, ARG5, ARG6, ARG7, ARG8)>(#name, this); \
 	} \
 	(*_sig_##name)(arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8); \
 } \
-template<> struct signal_registerer<N> \
+template<typename DUMMY> struct signal_registerer<N, DUMMY> \
 { \
 	template<class C> static void Register(C* obj, manager* _sig_manager) \
 	{ \
 		Signals::register_sender(obj, #name, Loki::TypeInfo(typeid(void(ARG1, ARG2, ARG3, ARG4, ARG5, ARG6, ARG7, ARG8))), _sig_manager); \
-		_sig_##name = _sig_manager->get_signal<void(ARG1, ARG2, ARG3, ARG4, ARG5, ARG6, ARG7, ARG8)>(#name, obj); \
-		signal_registerer<N-1>::Register(obj, _sig_manager); \
+        obj->_sig_##name = _sig_manager->get_signal<void(ARG1, ARG2, ARG3, ARG4, ARG5, ARG6, ARG7, ARG8)>(#name, obj); \
+        signal_registerer<N-1, DUMMY>::Register(obj, _sig_manager); \
 	} \
 };
 
@@ -351,27 +351,27 @@ inline void sig_##name(ARG1& arg1, ARG2& arg2, ARG3& arg3, ARG4& arg4, ARG5& arg
 	if(!_sig_manager) _sig_manager = manager::get_instance(); \
 	if(_sig_##name == nullptr)\
 	{ \
-		_sig_##name = _sig_manager->get_signal<void(ARG1, ARG2, ARG3, ARG4, ARG5, ARG6, ARG7, ARG8, ARG9)>(#name, this); \
+        _sig_##name = _sig_manager->get_signal<void(ARG1, ARG2, ARG3, ARG4, ARG5, ARG6, ARG7, ARG8, ARG9)>(#name, this); \
 	} \
 	(*_sig_##name)(arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9); \
 } \
-template<> struct signal_registerer<N> \
+template<typename DUMMY> struct signal_registerer<N, DUMMY> \
 { \
 	template<class C> static void Register(C* obj, manager* _sig_manager) \
 	{ \
 		Signals::register_sender(obj, #name, Loki::TypeInfo(typeid(void(ARG1, ARG2, ARG3, ARG4, ARG5, ARG6, ARG7, ARG8, ARG9))), _sig_manager); \
-		_sig_##name = _sig_manager->get_signal<void(ARG1, ARG2, ARG3, ARG4, ARG5, ARG6, ARG7, ARG8, ARG9)>(#name, obj); \
-		signal_registerer<N-1>::Register(obj, _sig_manager); \
+        obj->_sig_##name = _sig_manager->get_signal<void(ARG1, ARG2, ARG3, ARG4, ARG5, ARG6, ARG7, ARG8, ARG9)>(#name, obj); \
+        signal_registerer<N-1, DUMMY>::Register(obj, _sig_manager); \
 	} \
 };
 
 #ifdef _MSC_VER
 #define SIG_SEND(...) BOOST_PP_CAT( BOOST_PP_OVERLOAD(SIGNAL_, __VA_ARGS__ )(__VA_ARGS__, __COUNTER__), BOOST_PP_EMPTY() )
 #else
-#define SIG_SEND(...) BOOST_PP_CAT( BOOST_PP_OVERLOAD(SIGNAL_, __VA_ARGS__ )(__VA_ARGS__, __COUNTER__), BOOST_PP_EMPTY() )
+#define SIG_SEND(...) BOOST_PP_OVERLOAD(SIGNAL_, __VA_ARGS__ )(__VA_ARGS__, __COUNTER__)
 #endif
 
-#define SIGNALS_END_(N) virtual void setup_signals(manager* manager) { _sig_manager = manager; signal_registerer<N>::Register(this, _sig_manager);}
+#define SIGNALS_END_(N) virtual void setup_signals(manager* manager) { _sig_manager = manager; signal_registerer<N, int>::Register(this, _sig_manager);}
 #define SIGNALS_END SIGNALS_END_(__COUNTER__)
 
 
