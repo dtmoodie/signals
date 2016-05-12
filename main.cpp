@@ -29,20 +29,39 @@ void function(int x, int y)
 class TestSignalerImpl: public Signals::signaler
 {
 public:
-	SIGNALS_BEGIN;
-	SIG_SEND(test1, int);
-	SIG_SEND(test2, int, int);
-	SIG_SEND(test3, int, int, double);
-	SIG_SEND(test4, int, int, double, int);
-	SIG_SEND(test5, int, int, double, double, double);
-	SIG_SEND(test6, int, int, int, int, int, int);
-	SIG_SEND(test7, int, int, int, int, int, int, int);
-	SIG_SEND(test8, int, int, int, int, int, int, int, int);
-	SIG_SEND(test9, int, int, int, int, int, int, int, int, int);
-	
+	SIGNALS_BEGIN(TestSignalerImpl);
+	    SIG_SEND(test1, int);
+        SIG_SEND(test1, double);
+	    SIG_SEND(test2, int, int);
+	    SIG_SEND(test3, int, int, double);
+	    SIG_SEND(test4, int, int, double, int);
+	    SIG_SEND(test5, int, int, double, double, double);
+	    SIG_SEND(test6, int, int, int, int, int, int);
+	    SIG_SEND(test7, int, int, int, int, int, int, int);
+	    SIG_SEND(test8, int, int, int, int, int, int, int, int);
+	    SIG_SEND(test9, int, int, int, int, int, int, int, int, int);
+        SIG_SEND(test9, int, int, int, int, int, int, int, int, double);
+        SIG_SEND(test9, int, int, int, int, int, int, int, double, double);
+        SLOT(test_slot, void);
+        SLOT(test_slot, void, int);
+        SLOT(test_slot, void, int, int);
+        SLOT(test_slot, void, int, int, int);
+        SLOT(test_slot, void, int, int, int, int);
+        SLOT(test_slot, void, int, int, int, int, int);
+        SLOT(test_slot, void, int, int, int, int, int, int);
 	SIGNALS_END
 };
 
+SIGNAL_IMPL(TestSignalerImpl);
+
+void TestSignalerImpl::test_slot()
+{
+    std::cout << "Called " __FUNCTION__ << std::endl;
+}
+void TestSignalerImpl::test_slot(int )
+{
+    std::cout << "Called " __FUNCTION__ << std::endl;
+}
 template<class...T> class log_sink : public Signals::signal_sink<T...>
 {
 public:
@@ -67,6 +86,7 @@ public:
 using namespace Signals;
 int main()
 {
+    std::cout <<  Signals::signal_registry::instance()->print_signal_map() << std::endl;
 	{
 		LOG(info) << "Testing sending and receiving of signals on different threads";
 		// Raw signals without a manager or signal registry, similar usage to boost signals
@@ -119,6 +139,8 @@ int main()
 		LOG(info) << "Testing signalling class with signal owned by manager";
 		TestSignalerImpl test_signaler1;
 		TestSignalerImpl test_signaler2;
+        test_signaler1.test_slot();
+        test_signaler1.test_slot(5);
 		
         // By connecting the signal through the signal manager with corresponding description, line, and file information.  A signal map can be generated so that we know what is sending and receiving a signal
         // The test signaler class automatically registers to the signal manager as a sender of a particular signal.  Currently senders and receivers are not deregistered with disconnection of signals.

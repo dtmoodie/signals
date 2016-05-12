@@ -3,6 +3,90 @@
 #include "signaler.h"
 using namespace Signals;
 
+
+
+
+signal_registry::signal_registry()
+{
+
+}
+
+signal_registry* signal_registry::instance()
+{
+    static signal_registry g_inst;
+    return &g_inst;
+}
+
+void signal_registry::add_signal(Loki::TypeInfo sender, std::string name, Loki::TypeInfo signature)
+{
+    _static_signal_registry[sender][name].push_back(signature);
+}
+
+void signal_registry::add_slot(Loki::TypeInfo receiver, std::string name, Loki::TypeInfo signature)
+{
+    _static_slot_registry[receiver][name].push_back(signature);
+}
+
+void signal_registry::add_python_registration_function(Loki::TypeInfo sender, std::function<void(void)> f)
+{
+    _static_python_registration_functions[sender] = f;
+}
+std::string signal_registry::print_signal_map()
+{
+    std::stringstream ss;
+    std::vector<Loki::TypeInfo> _printedSenders;
+    for(auto& senders : _static_signal_registry)
+    {
+        ss << "--------------------------\n";
+        ss << senders.first.name() << "\n";
+        if(senders.second.size())
+            ss << "  ---- SIGNALS ----\n";
+        for(auto& sig : senders.second)
+        {
+            ss << "    " << sig.first << "\n";
+            for(auto& s : sig.second)
+            {
+                ss << "    - " << s.name() << "\n";
+            }
+        }
+        auto itr = _static_slot_registry.find(senders.first);
+        if(itr != _static_slot_registry.end())
+        {
+            ss << "  ---- SLOTS ----\n";
+            for(auto & slot : itr->second)
+            {
+                ss << "    " << slot.first << "\n";
+                for(auto& overload : slot.second)
+                {
+                    ss << "      - " << overload.name() << "\n";
+                }
+            }
+        }
+        _printedSenders.push_back(senders.first);
+    }
+    // Now go through all receiver objects and print the ones that don't have signals
+    for(auto& receiver : _static_slot_registry)
+    {
+        if(std::count(_printedSenders.begin(), _printedSenders.end(), receiver.first) == 0)
+        {
+            ss << "--------------------------\n";
+            ss << receiver.first.name() << "\n";
+            ss << "  ---- SLOTS ----\n";
+            for(auto& slot : receiver.second)
+            {
+                ss << "    " << slot.first;
+                for(auto& overload : slot.second)
+                {
+                    ss << "     - " << overload.name() << "\n";
+                }            
+            }
+        }
+    }
+    return ss.str();
+}
+
+
+
 signal_manager::signal_manager()
 {
 }

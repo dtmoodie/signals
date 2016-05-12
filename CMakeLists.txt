@@ -7,6 +7,13 @@ find_package(Boost REQUIRED system log log_setup thread unit_test_framework)
   link_directories(${Boost_LIBRARY_DIR_RELEASE})
   link_directories(${Boost_LIBRARY_DIR})
 
+
+find_package(PythonLibs QUIET)
+if(PythonLibs_FOUND)
+  add_definitions(-DHAVE_BOOST_PYTHON)
+  include_directories(${PythonLibs_INCLUDE_DIRS})
+endif()
+
 include_directories(${CMAKE_CURRENT_SOURCE_DIR})
 
 file(GLOB_RECURSE src "signals/*.cpp")
