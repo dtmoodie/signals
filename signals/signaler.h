@@ -1,12 +1,13 @@
 
 #pragma once
 #include "Defs.h"
-
+#include "placeholder.h"
 #include "signal_manager.h"
 #include <boost/preprocessor.hpp>
 #include <boost/log/trivial.hpp>
 #define COMBINE1(X,Y) X##Y  // helper macro
 #define COMBINE(X,Y) COMBINE1(X,Y)
+
 
 #define SIGNALS_BEGIN_(CLASS_NAME, N_) \
 typedef CLASS_NAME THIS_CLASS;      \
@@ -36,7 +37,9 @@ template<typename DUMMY> struct signal_registerer<N_, DUMMY> \
 template<typename DUMMY> struct slot_registerer<N_, DUMMY> \
 { \
     static void RegisterStatic(Signals::signal_registry* registry){} \
-};
+}; \
+template<int N> bool connect_(std::string name, Signals::signal_base* signal, Signals::_counter_<N> dummy){ return connect_(name, signal, Signals::_counter_<N-1>()); } \
+bool connect_(std::string name, Signals::signal_base* signal, Signals::_counter_<N_> dummy){ return false; }
 
 #define SIGNALS_BEGIN(CLASS_NAME) SIGNALS_BEGIN_(CLASS_NAME, __COUNTER__)
 
@@ -307,6 +310,7 @@ template<typename DUMMY> struct signal_registerer<N, DUMMY> \
 #define SIGNALS_END_(N) \
 virtual void setup_signals(manager* manager) { _sig_manager = manager; signal_registerer<N, int>::Register(this, _sig_manager);} \
 struct static_registration{ static_registration() { signal_registerer<N-1, int>::RegisterStatic(Signals::signal_registry::instance()); slot_registerer<N-1, int>::RegisterStatic(Signals::signal_registry::instance());}}; \
+    virtual void connect(std::string name, Signals::signal_base* signal){ connect_(name, signal, Signals::_counter_<N-1>()); }
 
 #define SIGNALS_END SIGNALS_END_(__COUNTER__)
 
@@ -319,7 +323,20 @@ struct static_registration{ static_registration() { signal_registerer<N-1, int>:
             registry->add_slot(Loki::TypeInfo(typeid(THIS_CLASS)),#NAME, Loki::TypeInfo(typeid(RETURN(__VA_ARGS__)))); \
             slot_registerer<N-1, DUMMY>::RegisterStatic(registry); \
         } \
-    };
+    }; \
+    bool connect_(std::string name, Signals::signal_base* signal, Signals::_counter_<N> dummy) \
+    {   \
+        if(name == #NAME) \
+        { \
+            auto typed_signal = dynamic_cast<Signals::typed_signal_base<RETURN(__VA_ARGS__)>*>(signal); \
+            if(typed_signal) \
+            { \
+                _connections.push_back(typed_signal->connect(my_bind(&THIS_CLASS::##NAME, this, make_int_sequence<BOOST_PP_VARIADIC_SIZE(__VA_ARGS__)>{} ))); \
+                return true; \
+            } \
+        } \
+        return connect_(name, signal, Signals::_counter_<N-1>()); \
+    }
 
 #define SIGNAL_IMPL(CLASS_NAME) static CLASS_NAME::static_registration g_##CLASS_NAME##_registration_instance;
 
@@ -342,6 +359,7 @@ struct static_registration{ static_registration() { signal_registerer<N-1, int>:
 
 namespace Signals
 {
+    template<int N> class _counter_{};
     class SIGNAL_EXPORTS signaler
     {
 	public:
@@ -355,6 +373,7 @@ namespace Signals
 		}
     protected:
 		manager* _sig_manager;
+        std::vector<std::shared_ptr<connection>> _connections;
     public:
 
     };
