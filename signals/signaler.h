@@ -43,15 +43,16 @@ bool connect_(std::string name, Signals::signal_base* signal, Signals::_counter_
 
 #define SIGNALS_BEGIN(CLASS_NAME) SIGNALS_BEGIN_(CLASS_NAME, __COUNTER__)
 
-#define SIGNAL_1(name, N) Signals::typed_signal_base<void(void)>* COMBINE(COMBINE(_sig_##name##_,N)##_,N) = nullptr; \
+#define SIGNAL_1(name, N) \
+Signals::typed_signal_base<void(void)>* COMBINE(_sig_##name##_,N) = nullptr; \
 inline void sig_##name()\
 {\
 	if(!_sig_manager) _sig_manager = manager::get_instance(); \
-	if(COMBINE(COMBINE(_sig_##name##_,N)##_,N) == nullptr)\
+	if(COMBINE(_sig_##name##_,N) == nullptr)\
 	{ \
-		COMBINE(COMBINE(_sig_##name##_,N)##_,N) = _sig_manager->get_signal<void(void)>(#name); \
+		COMBINE(_sig_##name##_,N) = _sig_manager->get_signal<void(void)>(#name); \
 	} \
-	(*COMBINE(COMBINE(_sig_##name##_,N)##_,N))(); \
+	(*COMBINE(_sig_##name##_,N))(); \
 } \
 template<typename DUMMY> struct signal_registerer<N, DUMMY> \
 { \
@@ -59,7 +60,7 @@ template<typename DUMMY> struct signal_registerer<N, DUMMY> \
 	{ \
 		Signals::register_sender(obj, #name, Loki::TypeInfo(typeid(void(void))), _sig_manager); \
 		_sig_manager->get_signal<void()>(#name, obj); \
-		signal_registerer<N-1>::Register(obj, _sig_manager); \
+		signal_registerer<N-1, DUMMY>::Register(obj, _sig_manager); \
 	} \
     static void RegisterStatic(Signals::signal_registry* registry) \
     { \
@@ -68,15 +69,16 @@ template<typename DUMMY> struct signal_registerer<N, DUMMY> \
     } \
 };
 
-#define SIGNAL_2(name, ARG1, N) Signals::typed_signal_base<void(ARG1)>* COMBINE(COMBINE(_sig_##name##_,N)##_,N) = nullptr; \
-inline void sig_##name(ARG1& arg1)\
+#define SIGNAL_2(name, ARG1, N) \
+Signals::typed_signal_base<void(ARG1)>* COMBINE(_sig_##name##_,N) = nullptr; \
+inline void sig_##name(ARG1 arg1)\
 {\
 	if(!_sig_manager) _sig_manager = manager::get_instance(); \
-	if(COMBINE(COMBINE(_sig_##name##_,N)##_,N) == nullptr)\
+	if(COMBINE(_sig_##name##_,N) == nullptr)\
 	{ \
-		COMBINE(COMBINE(_sig_##name##_,N)##_,N) = _sig_manager->get_signal<void(ARG1)>(#name, this); \
+		COMBINE(_sig_##name##_,N) = _sig_manager->get_signal<void(ARG1)>(#name, this); \
 	} \
-	(*COMBINE(COMBINE(_sig_##name##_,N)##_,N))(arg1); \
+	(*COMBINE(_sig_##name##_,N))(arg1); \
 } \
 template<typename DUMMY> struct signal_registerer<N, DUMMY> \
 { \
@@ -94,8 +96,8 @@ template<typename DUMMY> struct signal_registerer<N, DUMMY> \
 };
 
 #define SIGNAL_3(name, ARG1, ARG2,  N) \
-Signals::typed_signal_base<void(ARG1, ARG2)>* COMBINE(_sig_##name##_,N); \
-inline void sig_##name(ARG1& arg1, ARG2& arg2)\
+Signals::typed_signal_base<void(ARG1, ARG2)>* COMBINE(_sig_##name##_,N) = nullptr; \
+inline void sig_##name(ARG1 arg1, ARG2 arg2)\
 {\
 	if(!_sig_manager) _sig_manager = manager::get_instance(); \
 	if(COMBINE(_sig_##name##_,N) == nullptr)\
@@ -120,8 +122,8 @@ template<typename DUMMY> struct signal_registerer<N, DUMMY> \
 };
 
 #define SIGNAL_4(name, ARG1, ARG2, ARG3, N) \
-Signals::typed_signal_base<void(ARG1, ARG2, ARG3)>* COMBINE(_sig_##name##_,N); \
-inline void sig_##name(ARG1& arg1, ARG2& arg2, ARG3& arg3)\
+Signals::typed_signal_base<void(ARG1, ARG2, ARG3)>* COMBINE(_sig_##name##_,N) = nullptr; \
+inline void sig_##name(ARG1 arg1, ARG2 arg2, ARG3 arg3)\
 {\
 	if(!_sig_manager) _sig_manager = manager::get_instance(); \
 	if(COMBINE(_sig_##name##_,N) == nullptr)\
@@ -146,8 +148,8 @@ template<typename DUMMY> struct signal_registerer<N, DUMMY> \
 };
 
 #define SIGNAL_5(name, ARG1, ARG2, ARG3, ARG4, N) \
-Signals::typed_signal_base<void(ARG1, ARG2, ARG3, ARG4)>* COMBINE(_sig_##name##_,N); \
-inline void sig_##name(ARG1& arg1, ARG2& arg2, ARG3& arg3, ARG4& arg4)\
+Signals::typed_signal_base<void(ARG1, ARG2, ARG3, ARG4)>* COMBINE(_sig_##name##_,N) = nullptr; \
+inline void sig_##name(ARG1 arg1, ARG2 arg2, ARG3 arg3, ARG4 arg4)\
 {\
 	if(!_sig_manager) _sig_manager = manager::get_instance(); \
 	if(COMBINE(_sig_##name##_,N) == nullptr)\
@@ -173,7 +175,7 @@ template<typename DUMMY> struct signal_registerer<N, DUMMY> \
 
 #define SIGNAL_6(name, ARG1, ARG2, ARG3, ARG4, ARG5, N) \
 Signals::typed_signal_base<void(ARG1, ARG2, ARG3, ARG4, ARG5)>* COMBINE(_sig_##name##_,N) = nullptr; \
-inline void sig_##name(ARG1& arg1, ARG2& arg2, ARG3& arg3, ARG4& arg4, ARG5& arg5)\
+inline void sig_##name(ARG1 arg1, ARG2 arg2, ARG3 arg3, ARG4 arg4, ARG5 arg5)\
 {\
 	if(!_sig_manager) _sig_manager = manager::get_instance(); \
 	if(COMBINE(_sig_##name##_,N) == nullptr)\
@@ -199,7 +201,7 @@ template<typename DUMMY> struct signal_registerer<N, DUMMY> \
 
 #define SIGNAL_7(name, ARG1, ARG2, ARG3, ARG4, ARG5, ARG6, N) \
 Signals::typed_signal_base<void(ARG1, ARG2, ARG3, ARG4, ARG5, ARG6)>* COMBINE(_sig_##name##_,N) = nullptr; \
-inline void sig_##name(ARG1& arg1, ARG2& arg2, ARG3& arg3, ARG4& arg4, ARG5& arg5, ARG6& arg6)\
+inline void sig_##name(ARG1 arg1, ARG2 arg2, ARG3 arg3, ARG4 arg4, ARG5 arg5, ARG6 arg6)\
 {\
 	if(!_sig_manager) _sig_manager = manager::get_instance(); \
 	if(COMBINE(_sig_##name##_,N) == nullptr)\
@@ -225,7 +227,7 @@ template<typename DUMMY> struct signal_registerer<N, DUMMY> \
 
 #define SIGNAL_8(name, ARG1, ARG2, ARG3, ARG4, ARG5, ARG6, ARG7, N) \
 Signals::typed_signal_base<void(ARG1, ARG2, ARG3, ARG4, ARG5, ARG6, ARG7)>* COMBINE(_sig_##name##_,N) = nullptr; \
-inline void sig_##name(ARG1& arg1, ARG2& arg2, ARG3& arg3, ARG4& arg4, ARG5& arg5, ARG6& arg6, ARG7& arg7)\
+inline void sig_##name(ARG1 arg1, ARG2 arg2, ARG3 arg3, ARG4 arg4, ARG5 arg5, ARG6 arg6, ARG7 arg7)\
 {\
 	if(!_sig_manager) _sig_manager = manager::get_instance(); \
 	if(COMBINE(_sig_##name##_,N) == nullptr)\
@@ -251,7 +253,7 @@ template<typename DUMMY> struct signal_registerer<N, DUMMY> \
 
 #define SIGNAL_9(name, ARG1, ARG2, ARG3, ARG4, ARG5, ARG6, ARG7, ARG8, N) \
 Signals::typed_signal_base<void(ARG1, ARG2, ARG3, ARG4, ARG5, ARG6, ARG7, ARG8)>* COMBINE(_sig_##name##_,N) = nullptr; \
-inline void sig_##name(ARG1& arg1, ARG2& arg2, ARG3& arg3, ARG4& arg4, ARG5& arg5, ARG6& arg6, ARG7& arg7, ARG8& arg8)\
+inline void sig_##name(ARG1 arg1, ARG2 arg2, ARG3 arg3, ARG4 arg4, ARG5 arg5, ARG6 arg6, ARG7 arg7, ARG8 arg8)\
 {\
 	if(!_sig_manager) _sig_manager = manager::get_instance(); \
 	if(COMBINE(_sig_##name##_,N) == nullptr)\
@@ -277,7 +279,7 @@ template<typename DUMMY> struct signal_registerer<N, DUMMY> \
 
 #define SIGNAL_10(name, ARG1, ARG2, ARG3, ARG4, ARG5, ARG6, ARG7, ARG8, ARG9, N) \
 Signals::typed_signal_base<void(ARG1, ARG2, ARG3, ARG4, ARG5, ARG6, ARG7, ARG8, ARG9)>* COMBINE(_sig_##name##_,N) = nullptr; \
-inline void sig_##name(ARG1& arg1, ARG2& arg2, ARG3& arg3, ARG4& arg4, ARG5& arg5, ARG6& arg6, ARG7& arg7, ARG8& arg8, ARG9& arg9)\
+inline void sig_##name(ARG1 arg1, ARG2 arg2, ARG3 arg3, ARG4 arg4, ARG5 arg5, ARG6 arg6, ARG7 arg7, ARG8 arg8, ARG9& arg9)\
 {\
 	if(!_sig_manager) _sig_manager = manager::get_instance(); \
 	if(COMBINE(_sig_##name##_,N) == nullptr)\
@@ -301,6 +303,7 @@ template<typename DUMMY> struct signal_registerer<N, DUMMY> \
     } \
   };
 
+
 #ifdef _MSC_VER
 #define SIG_SEND(...) BOOST_PP_CAT( BOOST_PP_OVERLOAD(SIGNAL_, __VA_ARGS__ )(__VA_ARGS__, __COUNTER__), BOOST_PP_EMPTY() )
 #else
@@ -310,7 +313,7 @@ template<typename DUMMY> struct signal_registerer<N, DUMMY> \
 #define SIGNALS_END_(N) \
 virtual void setup_signals(manager* manager) { _sig_manager = manager; signal_registerer<N, int>::Register(this, _sig_manager);} \
 struct static_registration{ static_registration() { signal_registerer<N-1, int>::RegisterStatic(Signals::signal_registry::instance()); slot_registerer<N-1, int>::RegisterStatic(Signals::signal_registry::instance());}}; \
-    virtual void connect(std::string name, Signals::signal_base* signal){ connect_(name, signal, Signals::_counter_<N-1>()); }
+    virtual void connect_signal(std::string name, Signals::signal_base* signal){ connect_(name, signal, Signals::_counter_<N-1>()); }
 
 #define SIGNALS_END SIGNALS_END_(__COUNTER__)
 
@@ -342,7 +345,7 @@ struct static_registration{ static_registration() { signal_registerer<N-1, int>:
 
 
 #ifdef _MSC_VER
-#define SLOT(NAME, RETURN, ...) SLOT_(NAME, __COUNTER__, RETURN, __VA_ARGS__)
+#define SLOT_DEF(NAME, RETURN, ...) SLOT_(NAME, __COUNTER__, RETURN, __VA_ARGS__)
 //#define SLOT(NAME, ...) BOOST_PP_CAT( BOOST_PP_OVERLOAD(SLOT_, __VA_ARGS__ )(NAME, __VA_ARGS__, __COUNTER__), BOOST_PP_EMPTY() )
 #else
 #define SLOT(NAME, RETURN, ...) BOOST_PP_OVERLOAD(SLOT_, __VA_ARGS__ )(NAME, RETURN, __VA_ARGS__, __COUNTER__)

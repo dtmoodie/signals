@@ -30,6 +30,7 @@ class TestSignalerImpl: public Signals::signaler
 {
 public:
 	SIGNALS_BEGIN(TestSignalerImpl);
+		SIG_SEND(test0);
 	    SIG_SEND(test1, int);
         SIG_SEND(test1, double);
 	    SIG_SEND(test2, int, int);
@@ -48,7 +49,7 @@ public:
         SLOT(test_slot, void, int, int, int);
         SLOT(test_slot, void, int, int, int, int);
         SLOT(test_slot, void, int, int, int, int, int);*/
-        SLOT(test_slot, void, int, int, int, int, int, int);
+        SLOT_DEF(test_slot, void, int, int, int, int, int, int);
 	SIGNALS_END
 };
 void TestSignalerImpl::test_slot(int, int, int, int, int, int)
@@ -136,8 +137,8 @@ int main()
 		TestSignalerImpl test_signaler1;
 		TestSignalerImpl test_signaler2;
         typed_signal_base<void(int, int, int, int, int, int)> auto_connected_signal;
-        test_signaler1.connect("asdf", &auto_connected_signal);
-        test_signaler1.connect("test_slot", &auto_connected_signal);
+        test_signaler1.connect_signal("asdf", &auto_connected_signal);
+        test_signaler1.connect_signal("test_slot", &auto_connected_signal);
 		
         // By connecting the signal through the signal manager with corresponding description, line, and file information.  A signal map can be generated so that we know what is sending and receiving a signal
         // The test signaler class automatically registers to the signal manager as a sender of a particular signal.  Currently senders and receivers are not deregistered with disconnection of signals.
