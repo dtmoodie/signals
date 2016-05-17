@@ -17,9 +17,25 @@
 //#include <boost/preprocessor.hpp>
 
 namespace Signals
-{
+{    
+    // Lets you do static introspection of any signaler object even those not constructed
+    class SIGNAL_EXPORTS signal_registry
+    {
+        std::map<Loki::TypeInfo, std::map<std::string, std::vector<Loki::TypeInfo>>> _static_signal_registry;
+        std::map<Loki::TypeInfo, std::map<std::string, std::vector<Loki::TypeInfo>>> _static_slot_registry;
+        std::map<Loki::TypeInfo, std::function<void(void)>> _static_python_registration_functions;
+        signal_registry();
+    public:
+        static signal_registry* instance();
+        void add_signal(Loki::TypeInfo sender, std::string name, Loki::TypeInfo signature);
+        void add_slot(Loki::TypeInfo receiver, std::string name, Loki::TypeInfo signature);
+        void add_python_registration_function(Loki::TypeInfo sender, std::function<void(void)> f);
+        std::string print_signal_map();        
+    };
     template<class Sig> class typed_signal_base;
 	class signaler;
+
+    // Manages shared ownership of signals so that multiple senders and receivers can exist, also allows for encapsulation of groups of signals based on subsystem
     class SIGNAL_EXPORTS signal_manager
     {
     public:
