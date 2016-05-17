@@ -304,11 +304,7 @@ template<typename DUMMY> struct signal_registerer<N, DUMMY> \
   };
 
 
-#ifdef _MSC_VER
-#define SIG_SEND(...) BOOST_PP_CAT( BOOST_PP_OVERLOAD(SIGNAL_, __VA_ARGS__ )(__VA_ARGS__, __COUNTER__), BOOST_PP_EMPTY() )
-#else
-#define SIG_SEND(...) BOOST_PP_OVERLOAD(SIGNAL_, __VA_ARGS__ )(__VA_ARGS__, __COUNTER__)
-#endif
+
 
 #define SIGNALS_END_(N) \
 virtual void setup_signals(manager* manager) { _sig_manager = manager; signal_registerer<N, int>::Register(this, _sig_manager);} \
@@ -346,19 +342,15 @@ struct static_registration{ static_registration() { signal_registerer<N-1, int>:
 
 #ifdef _MSC_VER
 #define SLOT_DEF(NAME, RETURN, ...) SLOT_(NAME, __COUNTER__, RETURN, __VA_ARGS__)
-//#define SLOT(NAME, ...) BOOST_PP_CAT( BOOST_PP_OVERLOAD(SLOT_, __VA_ARGS__ )(NAME, __VA_ARGS__, __COUNTER__), BOOST_PP_EMPTY() )
 #else
 #define SLOT(NAME, RETURN, ...) BOOST_PP_OVERLOAD(SLOT_, __VA_ARGS__ )(NAME, RETURN, __VA_ARGS__, __COUNTER__)
 #endif
 
-// name / signature
 #ifdef _MSC_VER
-#define SIG_DEF(...) BOOST_PP_CAT( BOOST_PP_OVERLOAD(SIG_DEF_, __VA_ARGS__ )(__VA_ARGS__), BOOST_PP_EMPTY() )
+#define SIG_SEND(...) BOOST_PP_CAT( BOOST_PP_OVERLOAD(SIGNAL_, __VA_ARGS__ )(__VA_ARGS__, __COUNTER__), BOOST_PP_EMPTY() )
 #else
-#define SIG_DEF(...) BOOST_PP_CAT( BOOST_PP_OVERLOAD(SIG_DEF_, __VA_ARGS__ )(__VA_ARGS__), BOOST_PP_EMPTY() )
+#define SIG_SEND(...) BOOST_PP_OVERLOAD(SIGNAL_, __VA_ARGS__ )(__VA_ARGS__, __COUNTER__)
 #endif
-
-
 
 namespace Signals
 {
