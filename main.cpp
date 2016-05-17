@@ -43,19 +43,51 @@ public:
 	    SIG_SEND(test9, int, int, int, int, int, int, int, int, int);
         SIG_SEND(test9, int, int, int, int, int, int, int, int, double);
         SIG_SEND(test9, int, int, int, int, int, int, int, double, double);
-        /*SLOT(test_slot, void);
-        SLOT(test_slot, void, int);
-        SLOT(test_slot, void, int, int);
-        SLOT(test_slot, void, int, int, int);
-        SLOT(test_slot, void, int, int, int, int);
-        SLOT(test_slot, void, int, int, int, int, int);*/
+        SLOT_DEF(test_slot, void);
+        REGISTER_SLOT(test_slot);
+        SLOT_DEF(test_slot, void, int);
+        REGISTER_SLOT(test_slot);
+        SLOT_DEF(test_slot, void, int, int);
+        REGISTER_SLOT(test_slot);
+        SLOT_DEF(test_slot, void, int, int, int);
+        REGISTER_SLOT(test_slot);
+        SLOT_DEF(test_slot, void, int, int, int, int);
+        REGISTER_SLOT(test_slot);
+        SLOT_DEF(test_slot, void, int, int, int, int, int);
+        REGISTER_SLOT(test_slot);
         SLOT_DEF(test_slot, void, int, int, int, int, int, int);
-	SIGNALS_END
+        REGISTER_SLOT(test_slot);
+	SIGNALS_END();
 };
 void TestSignalerImpl::test_slot(int, int, int, int, int, int)
 {
-
+    LOG(info) << __FUNCTION__;
 }
+void TestSignalerImpl::test_slot(int, int, int, int, int)
+{
+    LOG(info) << __FUNCTION__;
+}
+void TestSignalerImpl::test_slot(int, int, int, int)
+{
+    LOG(info) << __FUNCTION__;
+}
+void TestSignalerImpl::test_slot(int, int, int)
+{
+    LOG(info) << __FUNCTION__;
+}
+void TestSignalerImpl::test_slot(int, int)
+{
+    LOG(info) << __FUNCTION__;
+}
+void TestSignalerImpl::test_slot(int)
+{
+    LOG(info) << __FUNCTION__;
+}
+void TestSignalerImpl::test_slot()
+{
+    LOG(info) << __FUNCTION__;
+}
+
 SIGNAL_IMPL(TestSignalerImpl);
 
 
@@ -137,12 +169,22 @@ int main()
 		TestSignalerImpl test_signaler1;
 		TestSignalerImpl test_signaler2;
         typed_signal_base<void(int, int, int, int, int, int)> auto_connected_signal;
-        test_signaler1.connect_signal("asdf", &auto_connected_signal);
         test_signaler1.connect_signal("test_slot", &auto_connected_signal);
-		
+        auto_connected_signal(5,4,3,2,1,0);
+		Signals::signal_manager mgr;
+        test_signaler1.setup_signals(&mgr);
+        (*mgr.get_signal<void()>("test_slot"))();
+        (*mgr.get_signal<void(int)>("test_slot"))(0);
+        (*mgr.get_signal<void(int,int)>("test_slot"))(5,4);
+        (*mgr.get_signal<void(int, int, int)>("test_slot"))(0,1,2);
+        (*mgr.get_signal<void(int, int, int, int)>("test_slot"))(0,1,2,3);
+        (*mgr.get_signal<void(int, int, int, int, int)>("test_slot"))(0,1,2,3,4);
+        (*mgr.get_signal<void(int, int, int, int, int, int)>("test_slot"))(0,1,2,3,4,5);
+
         // By connecting the signal through the signal manager with corresponding description, line, and file information.  A signal map can be generated so that we know what is sending and receiving a signal
         // The test signaler class automatically registers to the signal manager as a sender of a particular signal.  Currently senders and receivers are not deregistered with disconnection of signals.
 		auto connection = Signals::signal_manager::get_instance()->connect<void(int)>("test1", [](int i)->void{LOG(info) << "Test sink: " << i; }, get_this_thread(), "Test lambda receiver", __LINE__, __FILE__);
+        
 		//test_signaler1.sig_test10(0, 1, 2, 3, 4, 5, 6, 7, 8, 9);
 		int val = 0;
 		test_signaler2.sig_test1(val);
