@@ -27,7 +27,7 @@ template<typename DUMMY> struct signal_registerer<N, DUMMY> \
 	template<class C> static void Register(C* obj, manager* _sig_manager) \
 	{ \
 		Signals::register_sender(obj, #name, Loki::TypeInfo(typeid(void(void))), _sig_manager); \
-		_sig_manager->get_signal<void()>(#name, obj); \
+		obj->COMBINE(_sig_##name##_, N) = _sig_manager->get_signal<void()>(#name, obj); \
 		signal_registerer<N-1, DUMMY>::Register(obj, _sig_manager); \
 	} \
     static void RegisterStatic(Signals::signal_registry* registry) \
@@ -53,7 +53,7 @@ template<typename DUMMY> struct signal_registerer<N, DUMMY> \
 	template<class C> static void Register(C* obj, manager* _sig_manager) \
 	{ \
 		Signals::register_sender(obj, #name, Loki::TypeInfo(typeid(void(ARG1))), _sig_manager); \
-		_sig_manager->get_signal<void(ARG1)>(#name, obj); \
+		obj->COMBINE(_sig_##name##_, N) = _sig_manager->get_signal<void(ARG1)>(#name, obj); \
         signal_registerer<N-1, DUMMY>::Register(obj, _sig_manager); \
 	} \
     static void RegisterStatic(Signals::signal_registry* registry) \
@@ -79,7 +79,7 @@ template<typename DUMMY> struct signal_registerer<N, DUMMY> \
 	template<class C> static void Register(C* obj, manager* _sig_manager) \
 	{ \
 		Signals::register_sender(obj, #name, Loki::TypeInfo(typeid(void(ARG1, ARG2))), _sig_manager); \
-        obj->COMBINE(_sig_##name##_,N) = _sig_manager->get_signal<void(ARG1, ARG2)>(#name, obj); \
+        obj->COMBINE(_sig_##name##_, N) = obj->COMBINE(_sig_##name##_,N) = _sig_manager->get_signal<void(ARG1, ARG2)>(#name, obj); \
         signal_registerer<N-1, DUMMY>::Register(obj, _sig_manager); \
 	} \
     static void RegisterStatic(Signals::signal_registry* registry) \
@@ -451,17 +451,14 @@ struct has_parent<T, typename Void<typename T::PARENT_CLASS>::type > {
 
 #define SIGNALS_END_(N) \
 template<typename T> void call_parent(Signals::signal_manager* manager, typename std::enable_if<has_parent<T>::value, void>::type* = nullptr) \
-{ \
-    T::PARENT_CLASS::setup_signals(manager); \
-    /*T::PARENT_CLASS::connect_signals(manager);*/ \
-    /*T::PARENT_CLASS::signal_registerer<N, int>::Register(this, manager);*/ \
-} \
-template<typename T> void call_parent(Signals::signal_manager* manager, typename std::enable_if<!has_parent<T>::value, void>::type* = nullptr){ } \
+{ T::PARENT_CLASS::setup_signals(manager); } \
+template<typename T> void call_parent(Signals::signal_manager* manager, typename std::enable_if<!has_parent<T>::value, void>::type* = nullptr) \
+{ } \
 virtual void setup_signals(Signals::signal_manager* manager) \
 { \
     call_parent<THIS_CLASS>(manager, nullptr); \
     _sig_manager = manager; \
-    /*signal_registerer<N, int>::Register(this, _sig_manager);*/ \
+    signal_registerer<N, int>::Register(this, _sig_manager); \
     connect_signals(manager); \
 } \
 struct static_registration \
