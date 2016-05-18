@@ -273,7 +273,7 @@ template<typename DUMMY> struct signal_registerer<N, DUMMY> \
 
 // -------------------------------------------------------------------------------------------
 #define SLOT__(NAME, N, RETURN, ...)\
-    RETURN NAME##(__VA_ARGS__); \
+    virtual RETURN NAME##(__VA_ARGS__); \
     template<typename DUMMY> struct slot_registerer<N, DUMMY> \
     { \
         static void RegisterStatic(Signals::signal_registry* registry) \
@@ -307,7 +307,7 @@ template<typename DUMMY> struct signal_registerer<N, DUMMY> \
     }
 
 #define SLOT_1(NAME, N, RETURN) \
-    RETURN NAME##(); \
+    virtual RETURN NAME##(); \
     template<typename DUMMY> struct slot_registerer<N, DUMMY> \
     { \
         static void RegisterStatic(Signals::signal_registry* registry) \
@@ -424,7 +424,7 @@ template<int N> bool connect_(std::string name, Signals::signal_manager* manager
 template<int N> bool register_slot_to_manager(Signals::signal_manager* manager, Signals::_counter_<N> dummy){ return register_slot_to_manager(manager, Signals::_counter_<N-1>()); } \
 bool connect_(std::string name, Signals::signal_base* signal, Signals::_counter_<N_> dummy){ return false; } \
 bool connect_(std::string name, Signals::signal_manager* manager, Signals::_counter_<N_> dummy){ return false; } \
-bool register_slot_to_manager(Signals::signal_manager* manager, Signals::_counter_<N_> dummy){ false; }
+bool register_slot_to_manager(Signals::signal_manager* manager, Signals::_counter_<N_> dummy){ return false; }
 
 
 #ifdef _MSC_VER
@@ -448,42 +448,20 @@ struct has_parent<T, typename Void<typename T::PARENT_CLASS>::type > {
     enum { value = 1 };
 };
 
-// -------------------------------------------------------------------------------------------
-/*#define SIGNALS_END_0(N) \
-virtual void setup_signals(manager* manager) \
-{ \
-    _sig_manager = manager; \
-    signal_registerer<N, int>::Register(this, _sig_manager); \
-} \
-struct static_registration{ \
-    static_registration() \
-    { \
-        signal_registerer<N-1, int>::RegisterStatic(Signals::signal_registry::instance()); \
-        slot_registerer<N-1, int>::RegisterStatic(Signals::signal_registry::instance()); \
-    } \
-}; \
-virtual void connect_signal(std::string name, Signals::signal_base* signal) \
-{ \
-    connect_(name, signal, Signals::_counter_<N-1>()); \
-} \
-virtual void connect_signals(manager* manager) \
-{ \
-    connect_(manager, Signals::_counter_<N-1>()); \
-} */
 
 #define SIGNALS_END_(N) \
 template<typename T> void call_parent(Signals::signal_manager* manager, typename std::enable_if<has_parent<T>::value, void>::type* = nullptr) \
 { \
     T::PARENT_CLASS::setup_signals(manager); \
-    T::PARENT_CLASS::connect_signals(manager); \
-    T::PARENT_CLASS::signal_registerer<N, int>::Register(this, manager); \
+    /*T::PARENT_CLASS::connect_signals(manager);*/ \
+    /*T::PARENT_CLASS::signal_registerer<N, int>::Register(this, manager);*/ \
 } \
 template<typename T> void call_parent(Signals::signal_manager* manager, typename std::enable_if<!has_parent<T>::value, void>::type* = nullptr){ } \
 virtual void setup_signals(Signals::signal_manager* manager) \
 { \
     call_parent<THIS_CLASS>(manager, nullptr); \
     _sig_manager = manager; \
-    signal_registerer<N, int>::Register(this, _sig_manager); \
+    /*signal_registerer<N, int>::Register(this, _sig_manager);*/ \
     connect_signals(manager); \
 } \
 struct static_registration \
@@ -494,8 +472,8 @@ struct static_registration \
     } \
     template<typename T> void register_(typename std::enable_if<has_parent<T>::value, void>::type* = nullptr) \
     { \
-        PARENT::signal_registerer<N-1, int>::RegisterStatic(Signals::signal_registry::instance()); \
-        PARENT::slot_registerer<N-1, int>::RegisterStatic(Signals::signal_registry::instance()); \
+        /*T::PARENT_CLASS::signal_registerer<N-1, int>::RegisterStatic(Signals::signal_registry::instance());*/ \
+        /*T::PARENT_CLASS::slot_registerer<N-1, int>::RegisterStatic(Signals::signal_registry::instance()); */\
         signal_registerer<N-1, int>::RegisterStatic(Signals::signal_registry::instance()); \
         slot_registerer<N-1, int>::RegisterStatic(Signals::signal_registry::instance());\
     } \
@@ -541,6 +519,13 @@ bool register_slot_to_manager(Signals::signal_manager* manager, Signals::_counte
 #else
 #define SLOT_DEF(NAME, ...) BOOST_PP_OVERLOAD(SLOT_, __VA_ARGS__))(NAME, __COUNTER__, __VA_ARGS__)
 #endif
+
+#ifdef _MSC_VER
+#define SLOT_OVERLOAD(NAME, ...) BOOST_PP_CAT(BOOST_PP_OVERLOAD(SLOT_OVERLOAD_, __VA_ARGS__)(NAME, __COUNTER__, __VA_ARGS__), BOOST_PP_EMPTY())
+#else
+
+#endif
+
 
 #define AUTO_SLOT(NAME, ...) SLOT_DEF(NAME, __VA_ARGS__); REGISTER_SLOT(NAME)
 

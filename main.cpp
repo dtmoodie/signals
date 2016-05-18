@@ -57,35 +57,76 @@ public:
         REGISTER_SLOT(test_slot);
         SLOT_DEF(test_slot, void, int, int, int, int, int, int);
         REGISTER_SLOT(test_slot);
-	SIGNALS_END();
+	SIGNALS_END;
+	int test0_counter = 0;
+	int test1_counter = 0;
+	int test2_counter = 0;
+	int test3_counter = 0;
+	int test4_counter = 0;
+	int test5_counter = 0;
+	int test6_counter = 0;
 };
-void TestSignalerImpl::test_slot(int, int, int, int, int, int)
+
+class Derived: public TestSignalerImpl
+{
+public:
+	SIGNALS_BEGIN(Derived, TestSignalerImpl);
+		SIG_SEND(test0);
+		SIG_SEND(test1);
+	SIGNALS_END;
+
+	virtual void test_slot();
+	virtual void test_slot(int);
+
+	int dtest0_counter = 0;
+	int dtest1_counter = 0;
+};
+void TestSignalerImpl::test_slot(int a, int b, int c, int d, int e, int f)
 {
     LOG(info) << __FUNCTION__;
+	test6_counter = test6_counter + a + b + c + d + e + f;
 }
-void TestSignalerImpl::test_slot(int, int, int, int, int)
+void TestSignalerImpl::test_slot(int a, int b, int c, int d, int e)
 {
     LOG(info) << __FUNCTION__;
+	test5_counter = test5_counter + a + b + c + d + e;
 }
-void TestSignalerImpl::test_slot(int, int, int, int)
+void TestSignalerImpl::test_slot(int a, int b, int c, int d)
 {
     LOG(info) << __FUNCTION__;
+	test4_counter = test4_counter + a + b + c + d;
 }
-void TestSignalerImpl::test_slot(int, int, int)
+void TestSignalerImpl::test_slot(int a, int b, int c)
 {
     LOG(info) << __FUNCTION__;
+	test3_counter = test3_counter + a + b + c;
 }
-void TestSignalerImpl::test_slot(int, int)
+void TestSignalerImpl::test_slot(int a, int b)
 {
     LOG(info) << __FUNCTION__;
+	test2_counter = test2_counter + a + b;
 }
-void TestSignalerImpl::test_slot(int)
+void TestSignalerImpl::test_slot(int a)
 {
     LOG(info) << __FUNCTION__;
+	test1_counter = test1_counter + a;
 }
 void TestSignalerImpl::test_slot()
 {
     LOG(info) << __FUNCTION__;
+	test0_counter++;
+}
+
+void Derived::test_slot()
+{
+	LOG(info) << __FUNCTION__;
+	dtest0_counter++;	
+}
+
+void Derived::test_slot(int a)
+{
+	LOG(info) << __FUNCTION__;
+	dtest1_counter = dtest1_counter  + a;
 }
 
 SIGNAL_IMPL(TestSignalerImpl);
@@ -166,28 +207,55 @@ int main()
 
 	{
 		LOG(info) << "Testing signalling class with signal owned by manager";
-		TestSignalerImpl test_signaler1;
-		TestSignalerImpl test_signaler2;
-        typed_signal_base<void(int, int, int, int, int, int)> auto_connected_signal;
-        test_signaler1.connect_signal("test_slot", &auto_connected_signal);
-        auto_connected_signal(5,4,3,2,1,0);
+
 		Signals::signal_manager mgr;
-        test_signaler1.setup_signals(&mgr);
-        (*mgr.get_signal<void()>("test_slot"))();
-        (*mgr.get_signal<void(int)>("test_slot"))(0);
-        (*mgr.get_signal<void(int,int)>("test_slot"))(5,4);
-        (*mgr.get_signal<void(int, int, int)>("test_slot"))(0,1,2);
-        (*mgr.get_signal<void(int, int, int, int)>("test_slot"))(0,1,2,3);
-        (*mgr.get_signal<void(int, int, int, int, int)>("test_slot"))(0,1,2,3,4);
-        (*mgr.get_signal<void(int, int, int, int, int, int)>("test_slot"))(0,1,2,3,4,5);
+
+		{
+			TestSignalerImpl test_signaler1;
+			typed_signal_base<void(int, int, int, int, int, int)> auto_connected_signal;
+
+			test_signaler1.connect_signal("test_slot", &auto_connected_signal);
+			auto_connected_signal(5,4,3,2,1,0);
+
+			test_signaler1.setup_signals(&mgr);
+			(*mgr.get_signal<void()>("test_slot"))();
+			(*mgr.get_signal<void(int)>("test_slot"))(0);
+			(*mgr.get_signal<void(int,int)>("test_slot"))(5,4);
+			(*mgr.get_signal<void(int, int, int)>("test_slot"))(0,1,2);
+			(*mgr.get_signal<void(int, int, int, int)>("test_slot"))(0,1,2,3);
+			(*mgr.get_signal<void(int, int, int, int, int)>("test_slot"))(0,1,2,3,4);
+			(*mgr.get_signal<void(int, int, int, int, int, int)>("test_slot"))(0,1,2,3,4,5);
+			{
+				Derived derived;
+				derived.setup_signals(&mgr);
+				(*mgr.get_signal<void()>("test_slot"))();
+				(*mgr.get_signal<void(int)>("test_slot"))(5);
+				(*mgr.get_signal<void(int,int)>("test_slot"))(5,4);
+				(*mgr.get_signal<void(int, int, int)>("test_slot"))(0,1,2);
+				(*mgr.get_signal<void(int, int, int, int)>("test_slot"))(0,1,2,3);
+				(*mgr.get_signal<void(int, int, int, int, int)>("test_slot"))(0,1,2,3,4);
+				(*mgr.get_signal<void(int, int, int, int, int, int)>("test_slot"))(0,1,2,3,4,5);
+			}
+			(*mgr.get_signal<void()>("test_slot"))();
+			(*mgr.get_signal<void(int)>("test_slot"))(0);
+			(*mgr.get_signal<void(int,int)>("test_slot"))(5,4);
+			(*mgr.get_signal<void(int, int, int)>("test_slot"))(0,1,2);
+			(*mgr.get_signal<void(int, int, int, int)>("test_slot"))(0,1,2,3);
+			(*mgr.get_signal<void(int, int, int, int, int)>("test_slot"))(0,1,2,3,4);
+			(*mgr.get_signal<void(int, int, int, int, int, int)>("test_slot"))(0,1,2,3,4,5);
+			
+		}
+		
+
+		
+		
+
 
         // By connecting the signal through the signal manager with corresponding description, line, and file information.  A signal map can be generated so that we know what is sending and receiving a signal
         // The test signaler class automatically registers to the signal manager as a sender of a particular signal.  Currently senders and receivers are not deregistered with disconnection of signals.
 		auto connection = Signals::signal_manager::get_instance()->connect<void(int)>("test1", [](int i)->void{LOG(info) << "Test sink: " << i; }, get_this_thread(), "Test lambda receiver", __LINE__, __FILE__);
         
-		//test_signaler1.sig_test10(0, 1, 2, 3, 4, 5, 6, 7, 8, 9);
-		int val = 0;
-		test_signaler2.sig_test1(val);
+		
 	}
 	Signals::signal_manager::get_instance()->print_signal_map();
 	{
