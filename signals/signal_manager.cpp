@@ -13,8 +13,10 @@ signal_registry::signal_registry()
 
 signal_registry* signal_registry::instance()
 {
-    static signal_registry g_inst;
-    return &g_inst;
+    static signal_registry* g_inst = nullptr;
+	if(g_inst == nullptr)
+		g_inst = new signal_registry();
+    return g_inst;
 }
 
 void signal_registry::add_signal(Loki::TypeInfo sender, std::string name, Loki::TypeInfo signature)
@@ -118,7 +120,9 @@ void signal_manager::register_sender(Loki::TypeInfo signal_signature, std::strin
 }
 void signal_manager::register_sender(Loki::TypeInfo signal_signature, std::string signal_name, Loki::TypeInfo sender_type, void* sender_ptr, std::string desc)
 {
-	_registered_sender_objects[signal_signature][signal_name].push_back(std::make_tuple(sender_type, sender_ptr, desc));
+	auto& vec = _registered_sender_objects[signal_signature][signal_name];
+	if(std::count_if(vec.begin(), vec.end(), [sender_ptr](const std::tuple<Loki::TypeInfo, void*, std::string>& data){return std::get<1>(data) == sender_ptr; }) == 0)
+		vec.push_back(std::make_tuple(sender_type, sender_ptr, desc));
 }
 void signal_manager::register_sender(Loki::TypeInfo signal_signature, std::string signal_name, std::string desc, std::string file_name, int line_number)
 {

@@ -1,15 +1,22 @@
 #include "inter_thread.h"
 #include <mutex>
 #include "concurrent_queue.hpp"
+#include <set>
 using namespace Signals;
 struct impl
 {
+#ifdef _DEBUG
+	std::set<void*> _deleted_objects;
+
+#endif
 	std::map<size_t,  // Thread id
-		std::pair<
+		std::tuple<
 			concurrent_queue<std::pair<std::function<void(void)>, void*>>,  // queue of function + obj*
-			std::function<void(void)>> // callback on push to queue
+			std::function<void(void)>, std::mutex> // callback on push to queue
 	> thread_queues;
+
 	std::mutex mtx;
+
 	static impl* inst()
 	{
 		static impl g_inst;
@@ -18,43 +25,46 @@ struct impl
 	void register_notifier(const std::function<void(void)>& f, size_t id)
 	{
 		std::lock_guard<std::mutex> lock(mtx);
-		thread_queues[id].second = f;
+		std::get<1>(thread_queues[id]) = f;
 	}
 	void push(const std::function<void(void)>& f, size_t id, void* obj)
 	{
-		std::pair<concurrent_queue<std::pair<std::function<void(void)>, void*>>, std::function<void(void)>>* queue = nullptr;
+		std::tuple<concurrent_queue<std::pair<std::function<void(void)>, void*>>, std::function<void(void)>, std::mutex>* queue = nullptr;
 		{
 			std::lock_guard<std::mutex> lock(mtx);
 			queue = &thread_queues[id];
 		}
-        if(queue->first.size() > 100)
-            LOG(warning) << "Queue overflow " << queue->first.size() << " for thread " << id;
-		queue->first.push(std::pair<std::function<void(void)>, void*>(f, obj));
-		if (queue->second)
-			queue->second();
+		std::lock_guard<std::mutex> lock(std::get<2>(*queue));
+        if(std::get<0>(*queue).size() > 100)
+            LOG(warning) << "Queue overflow " << std::get<0>(*queue).size() << " for thread " << id;
+		std::get<0>(*queue).push(std::pair<std::function<void(void)>, void*>(f, obj));
+		if (std::get<1>(*queue))
+			std::get<1>(*queue)();
 	}
 	void run()
 	{
-		std::pair<concurrent_queue<std::pair<std::function<void(void)>, void*>>, std::function<void(void)>>* queue = nullptr;
+		std::tuple<concurrent_queue<std::pair<std::function<void(void)>, void*>>, std::function<void(void)>, std::mutex>* queue = nullptr;
 		{
 			std::lock_guard<std::mutex> lock(mtx);
 			queue = &thread_queues[get_this_thread()];
 		}
+		std::lock_guard<std::mutex> lock(std::get<2>(*queue));
 		std::pair<std::function<void(void)>, void*> f;
-		while (queue->first.try_pop(f))
+		while (std::get<0>(*queue).try_pop(f))
 		{
 			f.first();
 		}
 	}
     void run_once()
     {
-		std::pair<concurrent_queue<std::pair<std::function<void(void)>, void*>>, std::function<void(void)>>* queue = nullptr;
+		std::tuple<concurrent_queue<std::pair<std::function<void(void)>, void*>>, std::function<void(void)>, std::mutex>* queue = nullptr;
 		{
 			std::lock_guard<std::mutex> lock(mtx);
 			queue = &thread_queues[get_this_thread()];
 		}
 		std::pair<std::function<void(void)>, void*> f;
-		if(queue->first.try_pop(f))
+		std::lock_guard<std::mutex> lock(std::get<2>(*queue));
+		if(std::get<0>(*queue).try_pop(f))
 		{
 			f.first();
 		}
@@ -64,11 +74,12 @@ struct impl
 		std::lock_guard<std::mutex> lock(mtx);
 		for (auto& queue: thread_queues)
 		{
-			for (auto itr = queue.second.first.begin(); itr != queue.second.first.end(); )
+			std::lock_guard<std::mutex> lock(std::get<2>(queue.second));
+			for (auto itr = std::get<0>(queue.second).begin(); itr != std::get<0>(queue.second).end(); )
 			{
 				if(itr->second == obj)
 				{
-					itr = queue.second.first.erase(itr);
+					itr = std::get<0>(queue.second).erase(itr);
 				}
 				else
 				{
@@ -80,6 +91,14 @@ struct impl
 };
 void thread_specific_queue::push(const std::function<void(void)>& f, size_t id, void* obj)
 {
+	
+#ifdef _DEBUG
+	if(impl::inst()->_deleted_objects.find(obj) != impl::inst()->_deleted_objects.end())
+	{
+		LOG(warning) << "Pushing function onto queue from deleted object";
+		return;
+	}
+#endif
 	impl::inst()->push(f, id, obj);
 }
 void thread_specific_queue::run()
@@ -97,4 +116,7 @@ void thread_specific_queue::run_once()
 void thread_specific_queue::remove_from_queue(void* obj)
 {
 	impl::inst()->remove_from_queue(obj);
+#ifdef _DEBUG
+	impl::inst()->_deleted_objects.insert(obj);
+#endif
 }

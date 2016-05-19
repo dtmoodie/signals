@@ -79,7 +79,7 @@ template<typename DUMMY> struct signal_registerer<N, DUMMY> \
 	template<class C> static void Register(C* obj, manager* _sig_manager) \
 	{ \
 		Signals::register_sender(obj, #name, Loki::TypeInfo(typeid(void(ARG1, ARG2))), _sig_manager); \
-        obj->COMBINE(_sig_##name##_, N) = obj->COMBINE(_sig_##name##_,N) = _sig_manager->get_signal<void(ARG1, ARG2)>(#name, obj); \
+        obj->COMBINE(_sig_##name##_,N) = _sig_manager->get_signal<void(ARG1, ARG2)>(#name, obj); \
         signal_registerer<N-1, DUMMY>::Register(obj, _sig_manager); \
 	} \
     static void RegisterStatic(Signals::signal_registry* registry) \
@@ -289,7 +289,7 @@ template<typename DUMMY> struct signal_registerer<N, DUMMY> \
             auto typed_signal = dynamic_cast<Signals::typed_signal_base<RETURN(__VA_ARGS__)>*>(signal); \
             if(typed_signal) \
             { \
-                _connections.push_back(typed_signal->connect(my_bind((RETURN(THIS_CLASS::*)(__VA_ARGS__))&THIS_CLASS::NAME, this, make_int_sequence<BOOST_PP_VARIADIC_SIZE(__VA_ARGS__)>{} ))); \
+                _connections[signal] = typed_signal->connect(my_bind((RETURN(THIS_CLASS::*)(__VA_ARGS__))&THIS_CLASS::NAME, this, make_int_sequence<BOOST_PP_VARIADIC_SIZE(__VA_ARGS__)>{} )); \
                 return true; \
             } \
         } \
@@ -300,7 +300,7 @@ template<typename DUMMY> struct signal_registerer<N, DUMMY> \
         if(name == #NAME)  \
         { \
             auto sig = manager->get_signal<RETURN(__VA_ARGS__)>(#NAME, this, get_description()); \
-            _connections.push_back(sig->connect(my_bind((RETURN(THIS_CLASS::*)(__VA_ARGS__))&THIS_CLASS::NAME, this, make_int_sequence<BOOST_PP_VARIADIC_SIZE(__VA_ARGS__)>{}))); \
+            _connections[sig] = sig->connect(my_bind((RETURN(THIS_CLASS::*)(__VA_ARGS__))&THIS_CLASS::NAME, this, make_int_sequence<BOOST_PP_VARIADIC_SIZE(__VA_ARGS__)>{})); \
             return true; \
         } \
         return false; \
@@ -323,7 +323,7 @@ template<typename DUMMY> struct signal_registerer<N, DUMMY> \
             auto typed_signal = dynamic_cast<Signals::typed_signal_base<RETURN()>*>(signal); \
             if(typed_signal) \
             { \
-                _connections.push_back(typed_signal->connect(std::bind((RETURN(THIS_CLASS::*)())&THIS_CLASS::NAME, this))); \
+                _connections[signal] = typed_signal->connect(std::bind((RETURN(THIS_CLASS::*)())&THIS_CLASS::NAME, this)); \
                 return true; \
             } \
         } \
@@ -334,7 +334,7 @@ template<typename DUMMY> struct signal_registerer<N, DUMMY> \
         if(name == #NAME)  \
         { \
             auto sig = manager->get_signal<RETURN()>(#NAME, this, get_description()); \
-            _connections.push_back(sig->connect(std::bind((RETURN(THIS_CLASS::*)())&THIS_CLASS::NAME, this))); \
+            _connections[sig] = sig->connect(std::bind((RETURN(THIS_CLASS::*)())&THIS_CLASS::NAME, this)); \
             return true; \
         } \
         return false; \
@@ -451,9 +451,10 @@ struct has_parent<T, typename Void<typename T::PARENT_CLASS>::type > {
 
 #define SIGNALS_END_(N) \
 template<typename T> void call_parent(Signals::signal_manager* manager, typename std::enable_if<has_parent<T>::value, void>::type* = nullptr) \
-{ T::PARENT_CLASS::setup_signals(manager); } \
-template<typename T> void call_parent(Signals::signal_manager* manager, typename std::enable_if<!has_parent<T>::value, void>::type* = nullptr) \
-{ } \
+{ \
+    T::PARENT_CLASS::setup_signals(manager); \
+} \
+template<typename T> void call_parent(Signals::signal_manager* manager, typename std::enable_if<!has_parent<T>::value, void>::type* = nullptr){ } \
 virtual void setup_signals(Signals::signal_manager* manager) \
 { \
     call_parent<THIS_CLASS>(manager, nullptr); \
@@ -469,8 +470,6 @@ struct static_registration \
     } \
     template<typename T> void register_(typename std::enable_if<has_parent<T>::value, void>::type* = nullptr) \
     { \
-        /*T::PARENT_CLASS::signal_registerer<N-1, int>::RegisterStatic(Signals::signal_registry::instance());*/ \
-        /*T::PARENT_CLASS::slot_registerer<N-1, int>::RegisterStatic(Signals::signal_registry::instance()); */\
         signal_registerer<N-1, int>::RegisterStatic(Signals::signal_registry::instance()); \
         slot_registerer<N-1, int>::RegisterStatic(Signals::signal_registry::instance());\
     } \
@@ -480,21 +479,17 @@ struct static_registration \
         slot_registerer<N-1, int>::RegisterStatic(Signals::signal_registry::instance());\
     } \
 }; \
-virtual void connect_signal(std::string name, Signals::signal_base* signal) \
+void connect_signal(std::string name, Signals::signal_base* signal) \
 {  \
     connect_(name, signal, Signals::_counter_<N-1>()); \
 } \
-virtual void connect_signals(manager* manager) \
+void connect_signals(manager* manager) \
 { \
     register_slot_to_manager(manager, Signals::_counter_<N-1>()); \
 }
 
 
-#ifdef _MSC_VER
 #define SIGNALS_END SIGNALS_END_(__COUNTER__)
-#else
-
-#endif
 
 // -------------------------------------------------------------------------------------------
 #define SIGNAL_IMPL(CLASS_NAME) static CLASS_NAME::static_registration g_##CLASS_NAME##_registration_instance;
@@ -546,11 +541,19 @@ namespace Signals
 		{
 			return "Base signaler implementation";
 		}
+        // Disconnect all slots associated with this signal
+        virtual void disconnect(Signals::signal_base* signal);
+        // Disconnects all slots associated with signals of this name
+        virtual void disconnect(std::string name);
+        // Disconnects all slots associated with signals of this name with given signature
+        template<typename Sig> void disconnect(std::string name)
+        {
+        
+        }
     protected:
 		manager* _sig_manager;
-        std::vector<std::shared_ptr<connection>> _connections;
+        std::map<Signals::signal_base*, std::shared_ptr<connection>> _connections;
     public:
 
-    };
-    
+    };    
 }
