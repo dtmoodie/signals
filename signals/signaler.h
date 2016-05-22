@@ -430,31 +430,32 @@ bool register_slot_to_manager(Signals::signal_manager* manager, Signals::_counte
 #ifdef _MSC_VER
 #define SIGNALS_BEGIN(...) BOOST_PP_CAT(BOOST_PP_OVERLOAD(SIGNALS_BEGIN_, __VA_ARGS__)(__VA_ARGS__, __COUNTER__), BOOST_PP_EMPTY())
 #else
-
+#define SIGNALS_BEGIN(...) BOOST_PP_OVERLOAD(SIGNALS_BEGIN_, __VA_ARGS__)(__VA_ARGS__, __COUNTER__)
 #endif
+namespace Signals
+{
+	template<class T>
+	struct Void {
+	  typedef void type;
+	};
 
-template<class T>
-struct Void {
-  typedef void type;
-};
+	template<class T, class U = void>
+	struct has_parent {
+		enum { value = 0 };
+	};
 
-template<class T, class U = void>
-struct has_parent {
-    enum { value = 0 };
-};
-
-template<class T>
-struct has_parent<T, typename Void<typename T::PARENT_CLASS>::type > {
-    enum { value = 1 };
-};
-
+	template<class T>
+	struct has_parent<T, typename Void<typename T::PARENT_CLASS>::type > {
+		enum { value = 1 };
+	};
+}
 
 #define SIGNALS_END_(N) \
-template<typename T> void call_parent(Signals::signal_manager* manager, typename std::enable_if<has_parent<T>::value, void>::type* = nullptr) \
+template<typename T> void call_parent(Signals::signal_manager* manager, typename std::enable_if<Signals::has_parent<T>::value, void>::type* = nullptr) \
 { \
     T::PARENT_CLASS::setup_signals(manager); \
 } \
-template<typename T> void call_parent(Signals::signal_manager* manager, typename std::enable_if<!has_parent<T>::value, void>::type* = nullptr){ } \
+template<typename T> void call_parent(Signals::signal_manager* manager, typename std::enable_if<!Signals::has_parent<T>::value, void>::type* = nullptr){ } \
 virtual void setup_signals(Signals::signal_manager* manager) \
 { \
     call_parent<THIS_CLASS>(manager, nullptr); \
@@ -468,12 +469,12 @@ struct static_registration \
     { \
         register_<THIS_CLASS>(); \
     } \
-    template<typename T> void register_(typename std::enable_if<has_parent<T>::value, void>::type* = nullptr) \
+    template<typename T> void register_(typename std::enable_if<Signals::has_parent<T>::value, void>::type* = nullptr) \
     { \
         signal_registerer<N-1, int>::RegisterStatic(Signals::signal_registry::instance()); \
         slot_registerer<N-1, int>::RegisterStatic(Signals::signal_registry::instance());\
     } \
-    template<typename T> void register_(typename std::enable_if<!has_parent<T>::value, void>::type* = nullptr)\
+    template<typename T> void register_(typename std::enable_if<!Signals::has_parent<T>::value, void>::type* = nullptr)\
     { \
         signal_registerer<N-1, int>::RegisterStatic(Signals::signal_registry::instance()); \
         slot_registerer<N-1, int>::RegisterStatic(Signals::signal_registry::instance());\
@@ -515,7 +516,7 @@ bool register_slot_to_manager(Signals::signal_manager* manager, Signals::_counte
 #ifdef _MSC_VER
 #define SLOT_OVERLOAD(NAME, ...) BOOST_PP_CAT(BOOST_PP_OVERLOAD(SLOT_OVERLOAD_, __VA_ARGS__)(NAME, __COUNTER__, __VA_ARGS__), BOOST_PP_EMPTY())
 #else
-
+#define SLOT_OVERLOAD(NAME, ...) BOOST_PP_OVERLOAD(SLOT_OVERLOAD_, __VA_ARGS__))(NAME, __COUNTER__, __VA_ARGS__)
 #endif
 
 

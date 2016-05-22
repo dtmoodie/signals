@@ -29,6 +29,11 @@ struct impl
 	}
 	void push(const std::function<void(void)>& f, size_t id, void* obj)
 	{
+		if(get_this_thread() == id)
+		{
+			f();
+			return;
+		}
 		std::tuple<concurrent_queue<std::pair<std::function<void(void)>, void*>>, std::function<void(void)>, std::mutex>* queue = nullptr;
 		{
 			std::lock_guard<std::mutex> lock(mtx);
@@ -41,12 +46,12 @@ struct impl
 		if (std::get<1>(*queue))
 			std::get<1>(*queue)();
 	}
-	void run()
+	void run(size_t id)
 	{
 		std::tuple<concurrent_queue<std::pair<std::function<void(void)>, void*>>, std::function<void(void)>, std::mutex>* queue = nullptr;
 		{
 			std::lock_guard<std::mutex> lock(mtx);
-			queue = &thread_queues[get_this_thread()];
+			queue = &thread_queues[id];
 		}
 		std::lock_guard<std::mutex> lock(std::get<2>(*queue));
 		std::pair<std::function<void(void)>, void*> f;
@@ -55,12 +60,12 @@ struct impl
 			f.first();
 		}
 	}
-    void run_once()
+    void run_once(size_t id)
     {
 		std::tuple<concurrent_queue<std::pair<std::function<void(void)>, void*>>, std::function<void(void)>, std::mutex>* queue = nullptr;
 		{
 			std::lock_guard<std::mutex> lock(mtx);
-			queue = &thread_queues[get_this_thread()];
+			queue = &thread_queues[id];
 		}
 		std::pair<std::function<void(void)>, void*> f;
 		std::lock_guard<std::mutex> lock(std::get<2>(*queue));
@@ -79,6 +84,7 @@ struct impl
 			{
 				if(itr->second == obj)
 				{
+					LOG(trace) << "Removing item from queue for object: " << obj;
 					itr = std::get<0>(queue.second).erase(itr);
 				}
 				else
@@ -95,23 +101,23 @@ void thread_specific_queue::push(const std::function<void(void)>& f, size_t id, 
 #ifdef _DEBUG
 	if(impl::inst()->_deleted_objects.find(obj) != impl::inst()->_deleted_objects.end())
 	{
-		LOG(warning) << "Pushing function onto queue from deleted object";
-		return;
+		LOG(trace) << "Pushing function onto queue from deleted object";
+		//return;
 	}
 #endif
 	impl::inst()->push(f, id, obj);
 }
-void thread_specific_queue::run()
+void thread_specific_queue::run(size_t id)
 {
-	impl::inst()->run();
+	impl::inst()->run(id);
 }
 void thread_specific_queue::register_notifier(const std::function<void(void)>& f, size_t id)
 {
 	impl::inst()->register_notifier(f, id);
 }
-void thread_specific_queue::run_once()
+void thread_specific_queue::run_once(size_t id)
 {
-	impl::inst()->run_once();
+	impl::inst()->run_once(id);
 }
 void thread_specific_queue::remove_from_queue(void* obj)
 {
