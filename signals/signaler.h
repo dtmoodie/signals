@@ -273,7 +273,7 @@ template<typename DUMMY> struct signal_registerer<N, DUMMY> \
 
 // -------------------------------------------------------------------------------------------
 #define SLOT__(NAME, N, RETURN, ...)\
-    virtual RETURN NAME##(__VA_ARGS__); \
+    virtual RETURN NAME(__VA_ARGS__); \
     template<typename DUMMY> struct slot_registerer<N, DUMMY> \
     { \
         static void RegisterStatic(Signals::signal_registry* registry) \
@@ -307,7 +307,7 @@ template<typename DUMMY> struct signal_registerer<N, DUMMY> \
     }
 
 #define SLOT_1(NAME, N, RETURN) \
-    virtual RETURN NAME##(); \
+    virtual RETURN NAME(); \
     template<typename DUMMY> struct slot_registerer<N, DUMMY> \
     { \
         static void RegisterStatic(Signals::signal_registry* registry) \
@@ -510,13 +510,13 @@ bool register_slot_to_manager(Signals::signal_manager* manager, Signals::_counte
 #ifdef _MSC_VER
 #define SLOT_DEF(NAME, ...) BOOST_PP_CAT( BOOST_PP_OVERLOAD(SLOT_, __VA_ARGS__)(NAME, __COUNTER__, __VA_ARGS__), BOOST_PP_EMPTY())
 #else
-#define SLOT_DEF(NAME, ...) BOOST_PP_OVERLOAD(SLOT_, __VA_ARGS__))(NAME, __COUNTER__, __VA_ARGS__)
+#define SLOT_DEF(NAME, ...) BOOST_PP_OVERLOAD(SLOT_, __VA_ARGS__)(NAME, __COUNTER__, __VA_ARGS__)
 #endif
 
 #ifdef _MSC_VER
 #define SLOT_OVERLOAD(NAME, ...) BOOST_PP_CAT(BOOST_PP_OVERLOAD(SLOT_OVERLOAD_, __VA_ARGS__)(NAME, __COUNTER__, __VA_ARGS__), BOOST_PP_EMPTY())
 #else
-#define SLOT_OVERLOAD(NAME, ...) BOOST_PP_OVERLOAD(SLOT_OVERLOAD_, __VA_ARGS__))(NAME, __COUNTER__, __VA_ARGS__)
+#define SLOT_OVERLOAD(NAME, ...) BOOST_PP_OVERLOAD(SLOT_OVERLOAD_, __VA_ARGS__)(NAME, __COUNTER__, __VA_ARGS__)
 #endif
 
 

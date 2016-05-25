@@ -9,7 +9,7 @@ namespace Signals
 	class SIGNAL_EXPORTS connection
 	{
 	public:
-		connection(boost::signals2::connection& connection_);
+        connection(const boost::signals2::connection& connection_);
 		virtual ~connection();
 	private:
 		boost::signals2::scoped_connection _connection;
@@ -19,7 +19,7 @@ namespace Signals
 	{
 		void* _connecting_class;
 	public:
-		class_connection(boost::signals2::connection& connection_, void* connecting_class_);
+        class_connection(const boost::signals2::connection& connection_, void* connecting_class_);
 		virtual ~class_connection();
 	};
     
