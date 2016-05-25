@@ -16,3 +16,18 @@ void signaler::setup_signals(signal_manager* mgr)
 {
 	_sig_manager = mgr;
 }
+void signaler::disconnect(Signals::signal_base* signal)
+{
+    for(auto itr = _connections.begin(); itr != _connections.end(); ++itr)
+    {
+        if(itr->first == signal)
+        {
+            _connections.erase(itr);
+            return;
+        }
+    }
+}
+void signaler::disconnect(std::string name)
+{
+    
+}

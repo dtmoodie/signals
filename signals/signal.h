@@ -30,34 +30,36 @@ namespace Signals
         {            
         }
 
-		std::shared_ptr<connection> connect(const std::function<R(T...)>& f, size_t destination_thread = get_this_thread(), bool force_queue = false)
+		std::shared_ptr<connection> connect(const std::function<R(T...)>& f, size_t destination_thread = get_this_thread(), bool force_queue = false, void* This = nullptr)
         {
             if(destination_thread != get_this_thread() || force_queue)
             {
-                auto f_ = [f, destination_thread](T... args)
+                auto f_ = [f, destination_thread, This](T... args)
                 {
                     // Lambda function receives the call from the boost signal and then pipes the actual function call
                     // over a queue to the correct thread
                     thread_specific_queue::push(std::bind([f](T... args_)->void
                     {
                         f(args_...);
-                    },args...), destination_thread);
+                    },args...), destination_thread, This);
                 };
-                return std::shared_ptr<connection>(new connection(boost::signals2::signal<R(T...)>::connect(f_)));
+				if(This == nullptr)
+					return std::shared_ptr<connection>(new connection(boost::signals2::signal<R(T...)>::connect(f_)));
+				else
+					return std::shared_ptr<connection>(new class_connection(boost::signals2::signal<R(T...)>::connect(f_), This));
             }else
             {
                 return std::shared_ptr<connection>(new connection(boost::signals2::signal<R(T...)>::connect(f)));
             }
         }
-
 		std::shared_ptr<connection> connect_log_sink(const std::function<void(T...)>& f, size_t destination_thread = get_this_thread())
 		{
             return connect(f, destination_thread);
 		}
 
-        std::shared_ptr<connection> connect(const std::function<R(T...)>& f, int dest_thread_type, bool force_queued = false)
+        std::shared_ptr<connection> connect(const std::function<R(T...)>& f, int dest_thread_type, bool force_queued = false, void* This = nullptr)
         {
-            return connect(f);
+            return connect(f, thread_registry::get_instance()->get_thread(dest_thread_type), force_queued, This);
         }
         void operator()(T... args)
         {

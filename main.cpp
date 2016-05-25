@@ -30,31 +30,50 @@ class TestSignalerImpl: public Signals::signaler
 {
 public:
 	SIGNALS_BEGIN(TestSignalerImpl);
-	    SIG_SEND(test1, int);
-        SIG_SEND(test1, double);
-	    SIG_SEND(test2, int, int);
-	    SIG_SEND(test3, int, int, double);
-	    SIG_SEND(test4, int, int, double, int);
-	    SIG_SEND(test5, int, int, double, double, double);
-	    SIG_SEND(test6, int, int, int, int, int, int);
-	    SIG_SEND(test7, int, int, int, int, int, int, int);
-	    SIG_SEND(test8, int, int, int, int, int, int, int, int);
-	    SIG_SEND(test9, int, int, int, int, int, int, int, int, int);
-        SIG_SEND(test9, int, int, int, int, int, int, int, int, double);
-        SIG_SEND(test9, int, int, int, int, int, int, int, double, double);
-        /*SLOT(test_slot, void);
-        SLOT(test_slot, void, int);
-        SLOT(test_slot, void, int, int);
-        SLOT(test_slot, void, int, int, int);
-        SLOT(test_slot, void, int, int, int, int);
-        SLOT(test_slot, void, int, int, int, int, int);*/
-        SLOT(test_slot, void, int, int, int, int, int, int);
-	SIGNALS_END
+        SLOT_DEF(test_slot, void, int);
+        REGISTER_SLOT(test_slot);
+	SIGNALS_END;
+	int test0_counter = 0;
+	int test1_counter = 0;
+	int test2_counter = 0;
+	int test3_counter = 0;
+	int test4_counter = 0;
+	int test5_counter = 0;
+	int test6_counter = 0;
 };
-void TestSignalerImpl::test_slot(int, int, int, int, int, int)
+
+class Derived: public TestSignalerImpl
+{
+public:
+	SIGNALS_BEGIN(Derived, TestSignalerImpl);
+		SIG_SEND(test0);
+        AUTO_SLOT(test_slot, void, int, int, int);
+		AUTO_SLOT(test_bind_slot, void, int);
+	SIGNALS_END;
+
+    void test_slot(int);
+	int dtest3_counter = 0;
+	int dtest1_counter = 0;
+};
+void TestSignalerImpl::test_slot(int a)
+{
+    LOG(info) << __FUNCTION__;
+	test1_counter = test1_counter + a;
+}
+void Derived::test_bind_slot(int test)
 {
 
 }
+void Derived::test_slot(int)
+{
+
+}
+
+void Derived::test_slot(int a, int b, int c)
+{
+    dtest3_counter += a + b + c;
+}
+
 SIGNAL_IMPL(TestSignalerImpl);
 
 
@@ -78,7 +97,10 @@ public:
 
 	}
 };
-
+template<typename T, typename C, class ... P> std::function<void(int)> special_bind(T sig, C This, P... Placeholders)
+{
+	return std::bind(sig, This, Placeholders...);
+}
 using namespace Signals;
 int main()
 {
@@ -107,44 +129,57 @@ int main()
             // Test sending a signal from a text string
             proxy->send(&test, "5 ! 6");
             proxy->install(&test);
+			// Shutdown the workthread
+			work_thread.interrupt();
+			work_thread.join();
+
+			// test serializzing to a stringstream
+			std::stringstream ss;
+			proxy->set_output_iostream(&ss);
+			test(10, 11);
+			std::string serialized = ss.str();
+			proxy->set_output_iostream(nullptr);
+			// Test serializing a signal to std::cout
+			for(int i = 0; i < 5; ++i)
+			{
+				LOG(info) << "Emitting signal, to be auto serialized";
+				std::cout << "Auto serialized value: ";  test(i, i+1);
+				std::cout << "\n";
+			}
+			delete proxy;
         }else
         {
             LOG(error) << "Null proxy returned for signal of type " << test.get_signal_type().name();
         }
-        // Shutdown the workthread
-		work_thread.interrupt();
-		work_thread.join();
-
-        // test serializzing to a stringstream
-        std::stringstream ss;
-        proxy->set_output_iostream(&ss);
-        test(10, 11);
-        std::string serialized = ss.str();
-        proxy->set_output_iostream(nullptr);
-        // Test serializing a signal to std::cout
-        for(int i = 0; i < 5; ++i)
-        {
-			LOG(info) << "Emitting signal, to be auto serialized";
-            std::cout << "Auto serialized value: ";  test(i, i+1);
-            std::cout << "\n";
-        }
-        delete proxy;
+        
 	}
 
 	{
 		LOG(info) << "Testing signalling class with signal owned by manager";
-		TestSignalerImpl test_signaler1;
-		TestSignalerImpl test_signaler2;
-        typed_signal_base<void(int, int, int, int, int, int)> auto_connected_signal;
-        test_signaler1.connect("asdf", &auto_connected_signal);
-        test_signaler1.connect("test_slot", &auto_connected_signal);
-		
+
+		Signals::signal_manager mgr;
+
+		{
+			TestSignalerImpl test_signaler1;
+			
+			{
+				Derived derived;
+                TestSignalerImpl* ptr = &derived;
+				auto f = special_bind(&Derived::test_bind_slot, &derived, std::placeholders::_1);
+				f(5);
+                ptr->setup_signals(&mgr);
+				(*mgr.get_signal<void(int)>("test_slot"))(2);
+                (*mgr.get_signal<void(int,int)>("test_slot"))(1,2);
+                (*mgr.get_signal<void(int,int, int)>("test_slot"))(1,2, 3);
+				mgr.print_signal_map();
+			}
+			(*mgr.get_signal<void(int)>("test_slot"))(3);
+		}
         // By connecting the signal through the signal manager with corresponding description, line, and file information.  A signal map can be generated so that we know what is sending and receiving a signal
         // The test signaler class automatically registers to the signal manager as a sender of a particular signal.  Currently senders and receivers are not deregistered with disconnection of signals.
 		auto connection = Signals::signal_manager::get_instance()->connect<void(int)>("test1", [](int i)->void{LOG(info) << "Test sink: " << i; }, get_this_thread(), "Test lambda receiver", __LINE__, __FILE__);
-		//test_signaler1.sig_test10(0, 1, 2, 3, 4, 5, 6, 7, 8, 9);
-		int val = 0;
-		test_signaler2.sig_test1(val);
+        
+		
 	}
 	Signals::signal_manager::get_instance()->print_signal_map();
 	{
