@@ -33,15 +33,13 @@ serialization_proxy_base* factory::get_proxy(Loki::TypeInfo type)
 
 void factory::register_proxy(std::function<serialization_proxy_base*()> function, Loki::TypeInfo type)
 {
-	//registry[type] = function;
+    registry[type] = function;
 }
 
 factory* factory::instance()
 {
-	static factory* inst = nullptr;
-	if(inst == nullptr)
-		inst = new factory();
-	return inst;
+    static factory inst;
+    return &inst;
 }
 
 void serialization_proxy_base::install(signal_base* signal)
