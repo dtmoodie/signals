@@ -33,7 +33,10 @@ serialization_proxy_base* factory::get_proxy(Loki::TypeInfo type)
 
 void factory::register_proxy(std::function<serialization_proxy_base*()> function, Loki::TypeInfo type)
 {
+#ifndef _MSC_VER
+	// Currently this funcitonality is broken on msvc for an unknown reason.
     registry[type] = function;
+#endif
 }
 
 factory* factory::instance()
