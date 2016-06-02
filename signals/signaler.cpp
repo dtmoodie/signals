@@ -1,5 +1,6 @@
 #include "signaler.h"
 #include "signal_manager.h"
+#include "inter_thread.h"
 using namespace Signals;
 signaler::signaler()
 {
@@ -11,6 +12,7 @@ signaler::~signaler()
 	{
 		_sig_manager->remove_sender(this);
 	}
+	thread_specific_queue::remove_from_queue(this);
 }
 void signaler::setup_signals(signal_manager* mgr)
 {

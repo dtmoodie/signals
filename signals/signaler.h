@@ -536,7 +536,7 @@ namespace Signals
 	public:
 		typedef signal_manager manager;
 		signaler();
-		~signaler();
+		virtual ~signaler();
 		virtual void setup_signals(manager* manager);
 		virtual std::string get_description()
 		{

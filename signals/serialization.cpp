@@ -35,7 +35,7 @@ void factory::register_proxy(std::function<serialization_proxy_base*()> function
 {
 #ifndef _MSC_VER
 	// Currently this funcitonality is broken on msvc for an unknown reason.
-    registry[type] = function;
+	registry[type] = function;
 #endif
 }
 
