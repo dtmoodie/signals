@@ -50,9 +50,18 @@ install(DIRECTORY /
 install(FILES ${CMAKE_BINARY_DIR}/SignalsConfig.cmake
   DESTINATION ./)
 
-		
-file(GLOB_RECURSE test_srcs "tests/*.cpp")
-
-add_executable(test_signals ${test_srcs})
-target_link_libraries(test_signals signals)
-set_target_properties(test_signals PROPERTIES FOLDER Tests)
+find_package(Boost QUIET COMPONENTS unit_test_framework)
+if(Boost_UNIT_TEST_FRAMEWORK_FOUND)		
+  file(GLOB_RECURSE test_srcs "tests/*.cpp")
+  foreach(testSrc ${test_srcs})
+    get_filename_component(testName ${testSrc} NAME_WE)
+    add_executable(${testName} ${testSrc})
+    target_link_libraries(${testName} signals ${Boost_UNIT_TEST_FRAMEWORK_LIBRARY})
+    set_target_properties(${testName} PROPERTIES FOLDER Tests)
+    set_target_properties(${testName} PROPERTIES FOLDER Tests/signals)
+    set_target_properties(${testName} PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin/tests)
+	add_test(NANE ${testName}
+	         WORKING_DIRECTORY ${CMAKE_BINARY_DIR}/bin 
+             COMMAND ${CMAKE_CURRENT_SOURCE_DIR}/testBin/${testName})
+  endforeach()
+endif()

@@ -29,7 +29,10 @@ namespace Signals
         virtual void add_log_sink(std::shared_ptr<signal_sink_base> sink, size_t destination_thread = get_this_thread())
         {            
         }
-
+		void disconnect(const std::function<R(T...)>& f)
+		{
+			boost::signals2::signal<R(T...)>::disconnect(f);
+		}
 		std::shared_ptr<connection> connect(const std::function<R(T...)>& f, size_t destination_thread = get_this_thread(), bool force_queue = false, void* This = nullptr)
         {
             if(destination_thread != get_this_thread() || force_queue)

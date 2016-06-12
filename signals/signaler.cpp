@@ -17,19 +17,44 @@ signaler::~signaler()
 void signaler::setup_signals(signal_manager* mgr)
 {
 	_sig_manager = mgr;
+	connect(mgr);
 }
-void signaler::disconnect(Signals::signal_base* signal)
+
+bool signaler::disconnect_from_signal(Signals::signal_base* signal)
 {
+	return signaler::disconnect(signal);
+}
+
+bool signaler::disconnect(Signals::signal_base* signal)
+{
+	if(signal == nullptr)
+		return false;
     for(auto itr = _connections.begin(); itr != _connections.end(); ++itr)
     {
         if(itr->first == signal)
         {
             _connections.erase(itr);
-            return;
+            return true;
         }
     }
+	return false;
 }
-void signaler::disconnect(std::string name)
+
+int signaler::disconnect()
 {
-    
+	return disconnect(_sig_manager);
 }
+
+int signaler::disconnect(std::string name)
+{
+   return disconnect(name, _sig_manager);
+}
+
+int signaler::connect()
+{
+	return connect(_sig_manager);
+}
+
+int signaler::connect(std::string name)
+{
+	return connect(name, _sig_manager);}

@@ -42,6 +42,28 @@ namespace Signals
         signal_manager();
         static signal_manager* get_instance();
         static void set_instance(signal_manager* inst);
+		template<typename T, template<class...> class Sink = signal_sink> typed_signal_base<T>* get_signal_optional(const std::string& name, const std::string& description = "", std::string file_name = "", int line_number = -1)
+		{
+			std::lock_guard<std::mutex> lock(mtx);
+			if (line_number != -1 && file_name.size())
+				register_sender(Loki::TypeInfo(typeid(T)), name, description, file_name, line_number);
+			auto signature = Loki::TypeInfo(typeid(typed_signal_base<T>));
+			auto itr = _signals.find(signature);
+			if(itr == _signals.end())
+				return nullptr;
+			auto itr2 = itr->second.find(name);
+			if(itr2 == itr->second.end())
+				return nullptr;
+
+			auto&sig = itr2->second;
+			if (!sig)
+			{
+				LOG(debug) << this << " Creating signal " << name << " <" << signature.name() << ">";
+				static sink_constructor<T, Sink<T>> sink_constructor;
+				sig.reset(new typed_signal_base<T>(description));
+			}
+			return std::dynamic_pointer_cast<typed_signal_base<T>>(sig).get();
+		}
 
 		template<typename T, template<class...> class Sink = signal_sink> typed_signal_base<T>* get_signal(const std::string& name, const std::string& description = "", std::string file_name = "", int line_number = -1)
         {
@@ -58,6 +80,29 @@ namespace Signals
 			}
             return std::dynamic_pointer_cast<typed_signal_base<T>>(sig).get();
         }
+
+		template<typename T, template<class...> class Sink = signal_sink, class C> typed_signal_base<T>* get_signal_optional(const std::string& name, C* This, const std::string& description = "")
+		{
+			std::lock_guard<std::mutex> lock(mtx);
+			register_sender(Loki::TypeInfo(typeid(T)), name, Loki::TypeInfo(typeid(C)), This, description);
+			auto signature = Loki::TypeInfo(typeid(typed_signal_base<T>));
+			auto itr = _signals.find(signature);
+			if(itr == _signals.end())
+				return nullptr;
+			auto itr2 = itr->second.find(name);
+			if(itr2 == itr->second.end())
+				return nullptr;
+			auto&sig = itr2->second;
+			if (!sig)
+			{
+				static sink_constructor<T, Sink<T>> sink_constructor;
+				LOG(debug) << this << " Creating signal " << name << " <" << signature.name() << ">";
+				sig.reset(new typed_signal_base<T>(description));
+			}
+			auto typed_sig = dynamic_cast<typed_signal_base<T>*>(sig.get());
+			return typed_sig;
+		}
+
 		template<typename T, template<class...> class Sink = signal_sink, class C> typed_signal_base<T>* get_signal(const std::string& name, C* This, const std::string& description = "")
 		{
 			std::lock_guard<std::mutex> lock(mtx);

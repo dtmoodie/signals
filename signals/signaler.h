@@ -295,18 +295,32 @@ template<typename DUMMY> struct signal_registerer<N, DUMMY> \
         } \
         return connect_(name, signal, Signals::_counter_<N-1>()); \
     } \
-    bool connect_(std::string name, manager* manager, Signals::_counter_<N> dummy) \
-    { \
-        if(name == #NAME)  \
-        { \
-            auto sig = manager->get_signal<RETURN(__VA_ARGS__)>(#NAME, this, get_description()); \
-            _connections[sig] = sig->connect(my_bind((RETURN(THIS_CLASS::*)(__VA_ARGS__))&THIS_CLASS::NAME, this, make_int_sequence<BOOST_PP_VARIADIC_SIZE(__VA_ARGS__)>{})); \
-            return true; \
-        } \
-        return false; \
-    }
+	int connect_(std::string name, manager* manager_, Signals::_counter_<N> dummy) \
+	{ \
+		if(name == #NAME) \
+		{ \
+			auto sig = manager_->get_signal<RETURN(__VA_ARGS__)>(#NAME, this, get_description()); \
+			_connections[sig] = sig->connect(my_bind((RETURN(THIS_CLASS::*)(__VA_ARGS__))&THIS_CLASS::NAME, this, make_int_sequence<BOOST_PP_VARIADIC_SIZE(__VA_ARGS__)>{} )); \
+			return connect_(name, manager_, Signals::_counter_<N-1>()) + 1; \
+		} \
+		return connect_(name, manager_, Signals::_counter_<N-1>()); \
+	} \
+	int disconnect_by_name(std::string name, manager* manager_, Signals::_counter_<N> dummy) \
+	{ \
+		if(name == #NAME) \
+		{ \
+			auto sig = manager_->get_signal_optional<RETURN(__VA_ARGS__)>(#NAME, this, get_description()); \
+			return disconnect_by_name(name, manager_, Signals::_counter_<N-1>()) + disconnect_from_signal(sig) ? 1 : 0; \
+		} \
+		return disconnect_by_name(name, manager_, Signals::_counter_<N-1>()); \
+	} \
+	int disconnect_(manager* manager_, Signals::_counter_<N> dummy) \
+	{ \
+		auto sig = manager_->get_signal_optional<RETURN(__VA_ARGS__)>(#NAME, this, get_description()); \
+		return disconnect_(manager_, Signals::_counter_<N-1>()) + disconnect_from_signal(sig) ? 1 : 0; \
+	} \
 
-#define SLOT_1(NAME, N, RETURN) \
+#define SLOT_1(RETURN, N, NAME) \
     virtual RETURN NAME(); \
     template<typename DUMMY> struct slot_registerer<N, DUMMY> \
     { \
@@ -329,28 +343,43 @@ template<typename DUMMY> struct signal_registerer<N, DUMMY> \
         } \
         return connect_(name, signal, Signals::_counter_<N-1>()); \
     } \
-    bool connect_(std::string name, manager* manager, Signals::_counter_<N> dummy) \
+    int connect_(std::string name, manager* manager_, Signals::_counter_<N> dummy) \
     { \
         if(name == #NAME)  \
         { \
-            auto sig = manager->get_signal<RETURN()>(#NAME, this, get_description()); \
+            auto sig = manager_->get_signal<RETURN()>(#NAME, this, get_description()); \
             _connections[sig] = sig->connect(std::bind((RETURN(THIS_CLASS::*)())&THIS_CLASS::NAME, this)); \
-            return true; \
+			return connect_(name, manager_, Signals::_counter_<N-1>()) + 1; \
         } \
-        return false; \
-    }
-#define SLOT_2(NAME, N, RETURN, ...) SLOT__(NAME, N, RETURN, __VA_ARGS__)
-#define SLOT_3(NAME, N, RETURN, ...) SLOT__(NAME, N, RETURN, __VA_ARGS__)
-#define SLOT_4(NAME, N, RETURN, ...) SLOT__(NAME, N, RETURN, __VA_ARGS__)
-#define SLOT_5(NAME, N, RETURN, ...) SLOT__(NAME, N, RETURN, __VA_ARGS__)
-#define SLOT_6(NAME, N, RETURN, ...) SLOT__(NAME, N, RETURN, __VA_ARGS__)
-#define SLOT_7(NAME, N, RETURN, ...) SLOT__(NAME, N, RETURN, __VA_ARGS__)
-#define SLOT_8(NAME, N, RETURN, ...) SLOT__(NAME, N, RETURN, __VA_ARGS__)
-#define SLOT_9(NAME, N, RETURN, ...) SLOT__(NAME, N, RETURN, __VA_ARGS__)
-#define SLOT_10(NAME, N, RETURN, ...) SLOT__(NAME, N, RETURN, __VA_ARGS__)
-#define SLOT_11(NAME, N, RETURN, ...) SLOT__(NAME, N, RETURN, __VA_ARGS__)
-#define SLOT_12(NAME, N, RETURN, ...) SLOT__(NAME, N, RETURN, __VA_ARGS__)
-#define SLOT_13(NAME, N, RETURN, ...) SLOT__(NAME, N, RETURN, __VA_ARGS__)
+        return connect_(name, manager_, Signals::_counter_<N-1>()); \
+    } \
+	int disconnect_by_name(std::string name, manager* manager_, Signals::_counter_<N> dummy) \
+	{ \
+		if(name == #NAME) \
+		{ \
+			auto sig = manager_->get_signal_optional<RETURN()>(#NAME, this, get_description()); \
+			return disconnect_by_name(name, manager_, Signals::_counter_<N-1>()) + disconnect_from_signal(sig) ? 1 : 0; \
+		} \
+		return disconnect_by_name(name, manager_, Signals::_counter_<N-1>()); \
+	} \
+	int disconnect_(manager* manager_, Signals::_counter_<N> dummy) \
+	{ \
+		auto sig = manager_->get_signal_optional<RETURN()>(#NAME); \
+		return disconnect_(manager_, Signals::_counter_<N-1>()) + disconnect_from_signal(sig) ? 1 : 0; \
+	} \
+
+#define SLOT_2(RETURN, N, NAME, ...) SLOT__(NAME, N, RETURN, __VA_ARGS__)
+#define SLOT_3(RETURN, N, NAME, ...) SLOT__(NAME, N, RETURN, __VA_ARGS__)
+#define SLOT_4(RETURN, N, NAME, ...) SLOT__(NAME, N, RETURN, __VA_ARGS__)
+#define SLOT_5(RETURN, N, NAME, ...) SLOT__(NAME, N, RETURN, __VA_ARGS__)
+#define SLOT_6(RETURN, N, NAME, ...) SLOT__(NAME, N, RETURN, __VA_ARGS__)
+#define SLOT_7(RETURN, N, NAME, ...) SLOT__(NAME, N, RETURN, __VA_ARGS__)
+#define SLOT_8(RETURN, N, NAME, ...) SLOT__(NAME, N, RETURN, __VA_ARGS__)
+#define SLOT_9(RETURN, N, NAME, ...) SLOT__(NAME, N, RETURN, __VA_ARGS__)
+#define SLOT_10(RETURN, N, NAME, ...) SLOT__(NAME, N, RETURN, __VA_ARGS__)
+#define SLOT_11(RETURN, N, NAME, ...) SLOT__(NAME, N, RETURN, __VA_ARGS__)
+#define SLOT_12(RETURN, N, NAME, ...) SLOT__(NAME, N, RETURN, __VA_ARGS__)
+#define SLOT_13(RETURN, N, NAME, ...) SLOT__(NAME, N, RETURN, __VA_ARGS__)
 
 // -------------------------------------------------------------------------------------------
 #define SIGNALS_BEGIN_1(CLASS_NAME, N_) \
@@ -382,12 +411,47 @@ template<typename DUMMY> struct slot_registerer<N_, DUMMY> \
 { \
     static void RegisterStatic(Signals::signal_registry* registry){} \
 }; \
-template<int N> bool connect_(std::string name, Signals::signal_base* signal, Signals::_counter_<N> dummy){ return connect_(name, signal, Signals::_counter_<N-1>()); } \
-template<int N> bool connect_(std::string name, Signals::signal_manager* manager, Signals::_counter_<N> dummy){ return connect_(name, manager, Signals::_counter_<N-1>()); } \
-template<int N> bool register_slot_to_manager(Signals::signal_manager* manager, Signals::_counter_<N> dummy){ return register_slot_to_manager(manager, Signals::_counter_<N-1>()); } \
-bool connect_(std::string name, Signals::signal_base* signal, Signals::_counter_<N_> dummy){ return false; } \
-bool connect_(std::string name, Signals::signal_manager* manager, Signals::_counter_<N_> dummy){ return false; } \
-bool register_slot_to_manager(Signals::signal_manager* manager, Signals::_counter_<N_> dummy){ return false; }
+template<int N> bool connect_(std::string name, Signals::signal_base* signal, Signals::_counter_<N> dummy) \
+{ \
+	return connect_(name, signal, Signals::_counter_<N-1>()); \
+} \
+template<int N> int connect_(std::string name, Signals::signal_manager* manager, Signals::_counter_<N> dummy) \
+{ \
+	return connect_(name, manager, Signals::_counter_<N-1>()); \
+} \
+template<int N> int connect_(Signals::signal_manager* manager, Signals::_counter_<N> dummy) \
+{ \
+	return connect_(manager, Signals::_counter_<N-1>()); \
+} \
+template<int N> int disconnect_(Signals::signal_manager* manager_, Signals::_counter_<N> dummy) \
+{ \
+	return disconnect_(manager_, Signals::_counter_<N-1>()); \
+} \
+template<int N> int disconnect_by_name(std::string name, Signals::signal_manager* manager_, Signals::_counter_<N> dummy) \
+{ \
+	return disconnect_by_name(name, manager_, Signals::_counter_<N - 1>()); \
+} \
+bool connect_(std::string name, Signals::signal_base* signal, Signals::_counter_<N_> dummy) \
+{ \
+	return false; \
+} \
+int connect_(std::string name, Signals::signal_manager* manager, Signals::_counter_<N_> dummy) \
+{ \
+	return 0; \
+} \
+int connect_(Signals::signal_manager* manager, Signals::_counter_<N_> dummy) \
+{ \
+	return 0; \
+} \
+int disconnect_(Signals::signal_manager* manager_, Signals::_counter_<N_> dummy)\
+{ \
+	return 0; \
+} \
+int disconnect_by_name(std::string name, Signals::signal_manager* manager_, Signals::_counter_<N_> dummy) \
+{ \
+	return 0; \
+} \
+
 
 #define SIGNALS_BEGIN_2(CLASS_NAME, PARENT, N_) \
 typedef CLASS_NAME THIS_CLASS; \
@@ -420,12 +484,15 @@ template<typename DUMMY> struct slot_registerer<N_, DUMMY> \
     static void RegisterStatic(Signals::signal_registry* registry){} \
 }; \
 template<int N> bool connect_(std::string name, Signals::signal_base* signal, Signals::_counter_<N> dummy){ return connect_(name, signal, Signals::_counter_<N-1>()); } \
-template<int N> bool connect_(std::string name, Signals::signal_manager* manager, Signals::_counter_<N> dummy){ return connect_(name, manager, Signals::_counter_<N-1>()); } \
-template<int N> bool register_slot_to_manager(Signals::signal_manager* manager, Signals::_counter_<N> dummy){ return register_slot_to_manager(manager, Signals::_counter_<N-1>()); } \
+template<int N> int connect_(std::string name, Signals::signal_manager* manager, Signals::_counter_<N> dummy){ return connect_(name, manager, Signals::_counter_<N-1>()); } \
+template<int N> int connect_(Signals::signal_manager* manager, Signals::_counter_<N> dummy){ return connect_(manager, Signals::_counter_<N-1>()); } \
+template<int N> int disconnect_by_name(std::string name, Signals::signal_manager* manager_, Signals::_counter_<N> dummy){ return disconnect_by_name(name, manager_, Signals::_counter_<N-1>());} \
+template<int N> int disconnect_(Signals::signal_manager* manager_, Signals::_counter_<N> dummy){return disconnect_(manager_, Signals::_counter_<N-1>());} \
 bool connect_(std::string name, Signals::signal_base* signal, Signals::_counter_<N_> dummy){ return false; } \
-bool connect_(std::string name, Signals::signal_manager* manager, Signals::_counter_<N_> dummy){ return false; } \
-bool register_slot_to_manager(Signals::signal_manager* manager, Signals::_counter_<N_> dummy){ return false; }
-
+int connect_(std::string name, Signals::signal_manager* manager, Signals::_counter_<N_> dummy){ return false; } \
+int connect_(Signals::signal_manager* manager, Signals::_counter_<N_> dummy){ return false; } \
+int disconnect_by_name(std::string name, Signals::signal_manager* manager_, Signals::_counter_<N_> dummy) { return 0; } \
+int disconnect_(Signals::signal_manager* manager_, Signals::_counter_<N_> dummy){ return 0; }
 
 #ifdef _MSC_VER
 #define SIGNALS_BEGIN(...) BOOST_PP_CAT(BOOST_PP_OVERLOAD(SIGNALS_BEGIN_, __VA_ARGS__)(__VA_ARGS__, __COUNTER__), BOOST_PP_EMPTY())
@@ -436,7 +503,7 @@ namespace Signals
 {
 	template<class T>
 	struct Void {
-	  typedef void type;
+		typedef void type;
 	};
 
 	template<class T, class U = void>
@@ -461,7 +528,7 @@ virtual void setup_signals(Signals::signal_manager* manager) \
     call_parent<THIS_CLASS>(manager, nullptr); \
     _sig_manager = manager; \
     signal_registerer<N, int>::Register(this, _sig_manager); \
-    connect_signals(manager); \
+    connect(manager); \
 } \
 struct static_registration \
 {  \
@@ -480,14 +547,26 @@ struct static_registration \
         slot_registerer<N-1, int>::RegisterStatic(Signals::signal_registry::instance());\
     } \
 }; \
-void connect_signal(std::string name, Signals::signal_base* signal) \
+bool connect(std::string name, Signals::signal_base* signal) \
 {  \
-    connect_(name, signal, Signals::_counter_<N-1>()); \
+    return connect_(name, signal, Signals::_counter_<N-1>()); \
 } \
-void connect_signals(manager* manager) \
+int connect(std::string name, manager* manager) \
 { \
-    register_slot_to_manager(manager, Signals::_counter_<N-1>()); \
-}
+	return connect_(name, manager, Signals::_counter_<N-1>()); \
+} \
+int connect(manager* manager) \
+{ \
+    return connect_(manager, Signals::_counter_<N-1>()); \
+}\
+int disconnect(std::string name, manager* manager_) \
+{ \
+	return disconnect_by_name(name, manager_, Signals::_counter_<N-1>()); \
+} \
+int disconnect(manager* manager_) \
+{ \
+	return disconnect_(manager_, Signals::_counter_<N-1>()); \
+} \
 
 
 #define SIGNALS_END SIGNALS_END_(__COUNTER__)
@@ -499,16 +578,16 @@ void connect_signals(manager* manager) \
 // -------------------------------------------------------------------------------------------
 // This macro signifies that this slot should automatically be connected to the appropriate signal from the signal_manager that is passed into setup_signals
 #define REGISTER_SLOT_(NAME, N) \
-bool register_slot_to_manager(Signals::signal_manager* manager, Signals::_counter_<N> dummy) \
+int connect_(Signals::signal_manager* manager, Signals::_counter_<N> dummy) \
 { \
     connect_(#NAME, manager, Signals::_counter_<N-1>()); \
-    return register_slot_to_manager(manager, Signals::_counter_<N-1>()); \
+    return connect_(manager, Signals::_counter_<N-1>()) + 1; \
 }
 
 #define REGISTER_SLOT(NAME) REGISTER_SLOT_(NAME, __COUNTER__)
 
 #ifdef _MSC_VER
-#define SLOT_DEF(NAME, ...) BOOST_PP_CAT( BOOST_PP_OVERLOAD(SLOT_, __VA_ARGS__)(NAME, __COUNTER__, __VA_ARGS__), BOOST_PP_EMPTY())
+#define SLOT_DEF(RET, ...) BOOST_PP_CAT( BOOST_PP_OVERLOAD(SLOT_, __VA_ARGS__)(RET, __COUNTER__, __VA_ARGS__), BOOST_PP_EMPTY())
 #else
 #define SLOT_DEF(NAME, ...) BOOST_PP_OVERLOAD(SLOT_, __VA_ARGS__)(NAME, __COUNTER__, __VA_ARGS__)
 #endif
@@ -518,9 +597,9 @@ bool register_slot_to_manager(Signals::signal_manager* manager, Signals::_counte
 #else
 #define SLOT_OVERLOAD(NAME, ...) BOOST_PP_OVERLOAD(SLOT_OVERLOAD_, __VA_ARGS__)(NAME, __COUNTER__, __VA_ARGS__)
 #endif
+#define REGISTER_SLOT_HELPER(NAME, ...) REGISTER_SLOT(NAME);
 
-
-#define AUTO_SLOT(NAME, ...) SLOT_DEF(NAME, __VA_ARGS__); REGISTER_SLOT(NAME)
+#define AUTO_SLOT(RETURN, ...) SLOT_DEF(RETURN, __VA_ARGS__); REGISTER_SLOT_HELPER(__VA_ARGS__)
 
 #ifdef _MSC_VER
 #define SIG_SEND(...) BOOST_PP_CAT( BOOST_PP_OVERLOAD(SIGNAL_, __VA_ARGS__ )(__VA_ARGS__, __COUNTER__), BOOST_PP_EMPTY() )
@@ -530,9 +609,9 @@ bool register_slot_to_manager(Signals::signal_manager* manager, Signals::_counte
 
 namespace Signals
 {
-    template<int N> class _counter_{};
-    class SIGNAL_EXPORTS signaler
-    {
+	template<int N> class _counter_{};
+	class SIGNAL_EXPORTS signaler
+	{
 	public:
 		typedef signal_manager manager;
 		signaler();
@@ -542,19 +621,28 @@ namespace Signals
 		{
 			return "Base signaler implementation";
 		}
-        // Disconnect all slots associated with this signal
-        virtual void disconnect(Signals::signal_base* signal);
-        // Disconnects all slots associated with signals of this name
-        virtual void disconnect(std::string name);
-        // Disconnects all slots associated with signals of this name with given signature
-        template<typename Sig> void disconnect(std::string name)
-        {
-        
-        }
-    protected:
+		// This connects a signal with provided name to this object, if there are slots that can receive it
+		virtual bool connect(std::string name, signal_base* signal) = 0;
+		// This connects all slots that were declared with AUTO_SLOT or with the additional REGISTER_SLOT macro.
+		virtual int connect(signal_manager* manager) = 0;
+		virtual int connect(); // Overload uses member signal manager
+		// This connects all slots with the given name to the provided manager
+		virtual int connect(std::string name, signal_manager* manager) = 0;
+		virtual int connect(std::string name); // Overload uses member signal manager
+		// This disconnects all slots from the given manager
+		virtual int disconnect(signal_manager* manager) = 0;
+		virtual int disconnect(); // overload uses member signal manager
+		// Disconnect all slots associated with this signal
+		virtual bool disconnect(Signals::signal_base* signal);
+		bool disconnect_from_signal(Signals::signal_base* signal);
+		// Disconnects all slots associated with signals of this name
+		virtual int disconnect(std::string name, signal_manager* manager) = 0;
+		virtual int disconnect(std::string name); // overload uses member signal manager
+		
+	protected:
 		manager* _sig_manager;
-        std::map<Signals::signal_base*, std::shared_ptr<connection>> _connections;
-    public:
+		std::map<Signals::signal_base*, std::shared_ptr<connection>> _connections;
+	public:
 
-    };    
+	};    
 }

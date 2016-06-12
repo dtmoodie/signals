@@ -30,8 +30,10 @@ class TestSignalerImpl: public Signals::signaler
 {
 public:
 	SIGNALS_BEGIN(TestSignalerImpl);
-        SLOT_DEF(test_slot, void, int);
+        SLOT_DEF(void, test_slot, int);
         REGISTER_SLOT(test_slot);
+		AUTO_SLOT(void, test_slot);
+		//SLOT_DEF(void, test_slot);
 	SIGNALS_END;
 	int test0_counter = 0;
 	int test1_counter = 0;
@@ -47,23 +49,31 @@ class Derived: public TestSignalerImpl
 public:
 	SIGNALS_BEGIN(Derived, TestSignalerImpl);
 		SIG_SEND(test0);
-        AUTO_SLOT(test_slot, void, int, int, int);
-		AUTO_SLOT(test_bind_slot, void, int);
+        AUTO_SLOT(void, test_slot, int, int, int);
+		AUTO_SLOT(void, test_bind_slot, int);
 	SIGNALS_END;
 
     void test_slot(int);
 	int dtest3_counter = 0;
 	int dtest1_counter = 0;
 };
+
+void TestSignalerImpl::test_slot()
+{
+
+}
+
 void TestSignalerImpl::test_slot(int a)
 {
     LOG(info) << __FUNCTION__;
 	test1_counter = test1_counter + a;
 }
+
 void Derived::test_bind_slot(int test)
 {
 
 }
+
 void Derived::test_slot(int)
 {
 
