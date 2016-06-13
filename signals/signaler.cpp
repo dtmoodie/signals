@@ -14,10 +14,10 @@ signaler::~signaler()
 	}
 	thread_specific_queue::remove_from_queue(this);
 }
-void signaler::setup_signals(signal_manager* mgr)
+int signaler::setup_signals(signal_manager* mgr)
 {
 	_sig_manager = mgr;
-	connect(mgr);
+	return connect(mgr);
 }
 
 bool signaler::disconnect_from_signal(Signals::signal_base* signal)
@@ -55,6 +55,6 @@ int signaler::connect()
 	return connect(_sig_manager);
 }
 
-int signaler::connect(std::string name)
+int signaler::connect_by_name(const std::string& name)
 {
-	return connect(name, _sig_manager);}
+	return connect_by_name(name, _sig_manager);}
