@@ -25,11 +25,11 @@ inline void sig_##name()\
 } \
 template<typename DUMMY> struct signal_registerer<N, DUMMY> \
 { \
-	template<class C> static void Register(C* obj, manager* _sig_manager) \
+	template<class C> static int Register(C* obj, manager* _sig_manager) \
 	{ \
 		Signals::register_sender(obj, #name, Loki::TypeInfo(typeid(void(void))), _sig_manager); \
 		obj->COMBINE(_sig_##name##_, N) = _sig_manager->get_signal<void()>(#name, obj); \
-		signal_registerer<N-1, DUMMY>::Register(obj, _sig_manager); \
+		return signal_registerer<N-1, DUMMY>::Register(obj, _sig_manager) + 1; \
 	} \
     static void RegisterStatic(Signals::signal_registry* registry) \
     { \
@@ -51,11 +51,11 @@ inline void sig_##name(ARG1 arg1)\
 } \
 template<typename DUMMY> struct signal_registerer<N, DUMMY> \
 { \
-	template<class C> static void Register(C* obj, manager* _sig_manager) \
+	template<class C> static int Register(C* obj, manager* _sig_manager) \
 	{ \
 		Signals::register_sender(obj, #name, Loki::TypeInfo(typeid(void(ARG1))), _sig_manager); \
 		obj->COMBINE(_sig_##name##_, N) = _sig_manager->get_signal<void(ARG1)>(#name, obj); \
-        signal_registerer<N-1, DUMMY>::Register(obj, _sig_manager); \
+        return signal_registerer<N-1, DUMMY>::Register(obj, _sig_manager) + 1; \
 	} \
     static void RegisterStatic(Signals::signal_registry* registry) \
     { \
@@ -77,11 +77,11 @@ inline void sig_##name(ARG1 arg1, ARG2 arg2)\
 } \
 template<typename DUMMY> struct signal_registerer<N, DUMMY> \
 { \
-	template<class C> static void Register(C* obj, manager* _sig_manager) \
+	template<class C> static int Register(C* obj, manager* _sig_manager) \
 	{ \
 		Signals::register_sender(obj, #name, Loki::TypeInfo(typeid(void(ARG1, ARG2))), _sig_manager); \
         obj->COMBINE(_sig_##name##_,N) = _sig_manager->get_signal<void(ARG1, ARG2)>(#name, obj); \
-        signal_registerer<N-1, DUMMY>::Register(obj, _sig_manager); \
+        return signal_registerer<N-1, DUMMY>::Register(obj, _sig_manager) + 1; \
 	} \
     static void RegisterStatic(Signals::signal_registry* registry) \
     { \
@@ -103,11 +103,11 @@ inline void sig_##name(ARG1 arg1, ARG2 arg2, ARG3 arg3)\
 } \
 template<typename DUMMY> struct signal_registerer<N, DUMMY> \
 { \
-	template<class C> static void Register(C* obj, manager* _sig_manager) \
+	template<class C> static int Register(C* obj, manager* _sig_manager) \
 	{ \
 		Signals::register_sender(obj, #name, Loki::TypeInfo(typeid(void(ARG1, ARG2, ARG3))), _sig_manager); \
         obj->COMBINE(_sig_##name##_,N) = _sig_manager->get_signal<void(ARG1, ARG2, ARG3)>(#name, obj); \
-        signal_registerer<N-1, DUMMY>::Register(obj, _sig_manager); \
+        return signal_registerer<N-1, DUMMY>::Register(obj, _sig_manager) + 1; \
 	} \
     static void RegisterStatic(Signals::signal_registry* registry) \
     { \
@@ -129,11 +129,11 @@ inline void sig_##name(ARG1 arg1, ARG2 arg2, ARG3 arg3, ARG4 arg4)\
 } \
 template<typename DUMMY> struct signal_registerer<N, DUMMY> \
 { \
-	template<class C> static void Register(C* obj, manager* _sig_manager) \
+	template<class C> static int Register(C* obj, manager* _sig_manager) \
 	{ \
 		Signals::register_sender(obj, #name, Loki::TypeInfo(typeid(void(ARG1, ARG2, ARG3, ARG4))), _sig_manager); \
         obj->COMBINE(_sig_##name##_,N) = _sig_manager->get_signal<void(ARG1, ARG2, ARG3, ARG4)>(#name, obj); \
-        signal_registerer<N-1, DUMMY>::Register(obj, _sig_manager); \
+        return signal_registerer<N-1, DUMMY>::Register(obj, _sig_manager) + 1; \
 	} \
     static void RegisterStatic(Signals::signal_registry* registry) \
     { \
@@ -155,11 +155,11 @@ inline void sig_##name(ARG1 arg1, ARG2 arg2, ARG3 arg3, ARG4 arg4, ARG5 arg5)\
 } \
 template<typename DUMMY> struct signal_registerer<N, DUMMY> \
 { \
-	template<class C> static void Register(C* obj, manager* _sig_manager) \
+	template<class C> static int Register(C* obj, manager* _sig_manager) \
 	{ \
 		Signals::register_sender(obj, #name, Loki::TypeInfo(typeid(void(ARG1, ARG2, ARG3, ARG4, ARG5))), _sig_manager); \
         obj->COMBINE(_sig_##name##_,N) = _sig_manager->get_signal<void(ARG1, ARG2, ARG3, ARG4, ARG5)>(#name, obj); \
-        signal_registerer<N-1, DUMMY>::Register(obj, _sig_manager); \
+        return signal_registerer<N-1, DUMMY>::Register(obj, _sig_manager) + 1; \
 	} \
     static void RegisterStatic(Signals::signal_registry* registry) \
     { \
@@ -181,11 +181,11 @@ inline void sig_##name(ARG1 arg1, ARG2 arg2, ARG3 arg3, ARG4 arg4, ARG5 arg5, AR
 } \
 template<typename DUMMY> struct signal_registerer<N, DUMMY> \
 { \
-	template<class C> static void Register(C* obj, manager* _sig_manager) \
+	template<class C> static int Register(C* obj, manager* _sig_manager) \
 	{ \
 		Signals::register_sender(obj, #name, Loki::TypeInfo(typeid(void(ARG1, ARG2, ARG3, ARG4, ARG5, ARG6))), _sig_manager); \
         obj->COMBINE(_sig_##name##_,N) = _sig_manager->get_signal<void(ARG1, ARG2, ARG3, ARG4, ARG5, ARG6)>(#name, obj); \
-        signal_registerer<N-1, DUMMY>::Register(obj, _sig_manager); \
+        return signal_registerer<N-1, DUMMY>::Register(obj, _sig_manager) + 1; \
 	} \
     static void RegisterStatic(Signals::signal_registry* registry) \
     { \
@@ -207,11 +207,11 @@ inline void sig_##name(ARG1 arg1, ARG2 arg2, ARG3 arg3, ARG4 arg4, ARG5 arg5, AR
 } \
 template<typename DUMMY> struct signal_registerer<N, DUMMY> \
 { \
-	template<class C> static void Register(C* obj, manager* _sig_manager) \
+	template<class C> static int Register(C* obj, manager* _sig_manager) \
 	{ \
 		Signals::register_sender(obj, #name, Loki::TypeInfo(typeid(void(ARG1, ARG2, ARG3, ARG4, ARG5, ARG6, ARG7))), _sig_manager); \
         obj->COMBINE(_sig_##name##_,N) = _sig_manager->get_signal<void(ARG1, ARG2, ARG3, ARG4, ARG5, ARG6, ARG7)>(#name, obj); \
-        signal_registerer<N-1, DUMMY>::Register(obj, _sig_manager); \
+        return signal_registerer<N-1, DUMMY>::Register(obj, _sig_manager) + 1; \
 	} \
     static void RegisterStatic(Signals::signal_registry* registry) \
     { \
@@ -233,11 +233,11 @@ inline void sig_##name(ARG1 arg1, ARG2 arg2, ARG3 arg3, ARG4 arg4, ARG5 arg5, AR
 } \
 template<typename DUMMY> struct signal_registerer<N, DUMMY> \
 { \
-	template<class C> static void Register(C* obj, manager* _sig_manager) \
+	template<class C> static int Register(C* obj, manager* _sig_manager) \
 	{ \
 		Signals::register_sender(obj, #name, Loki::TypeInfo(typeid(void(ARG1, ARG2, ARG3, ARG4, ARG5, ARG6, ARG7, ARG8))), _sig_manager); \
         obj->COMBINE(_sig_##name##_,N) = _sig_manager->get_signal<void(ARG1, ARG2, ARG3, ARG4, ARG5, ARG6, ARG7, ARG8)>(#name, obj); \
-        signal_registerer<N-1, DUMMY>::Register(obj, _sig_manager); \
+        return signal_registerer<N-1, DUMMY>::Register(obj, _sig_manager) + 1; \
 	} \
     static void RegisterStatic(Signals::signal_registry* registry) \
     { \
@@ -259,11 +259,11 @@ inline void sig_##name(ARG1 arg1, ARG2 arg2, ARG3 arg3, ARG4 arg4, ARG5 arg5, AR
 } \
 template<typename DUMMY> struct signal_registerer<N, DUMMY> \
 { \
-	template<class C> static void Register(C* obj, manager* _sig_manager) \
+	template<class C> static int Register(C* obj, manager* _sig_manager) \
 	{ \
 		Signals::register_sender(obj, #name, Loki::TypeInfo(typeid(void(ARG1, ARG2, ARG3, ARG4, ARG5, ARG6, ARG7, ARG8, ARG9))), _sig_manager); \
         obj->COMBINE(_sig_##name##_,N) = _sig_manager->get_signal<void(ARG1, ARG2, ARG3, ARG4, ARG5, ARG6, ARG7, ARG8, ARG9)>(#name, obj); \
-        signal_registerer<N-1, DUMMY>::Register(obj, _sig_manager); \
+        return signal_registerer<N-1, DUMMY>::Register(obj, _sig_manager) + 1; \
 	} \
     static void RegisterStatic(Signals::signal_registry* registry) \
     { \
@@ -313,7 +313,7 @@ template<typename DUMMY> struct signal_registerer<N, DUMMY> \
 		if(name == #NAME) \
 		{ \
 			auto sig = manager_->get_signal_optional<RETURN(__VA_ARGS__)>(#NAME, this, get_description()); \
-			LOG(trace) << "[" #NAME " - " << sig->get_signal_type().name() << "]"; \
+			if(sig) LOG(trace) << "[" #NAME " - " << sig->get_signal_type().name() << "]"; \
 			return disconnect_by_name(name, manager_, Signals::_counter_<N-1>()) + disconnect_from_signal(sig) ? 1 : 0; \
 		} \
 		return disconnect_by_name(name, manager_, Signals::_counter_<N-1>()); \
@@ -321,8 +321,8 @@ template<typename DUMMY> struct signal_registerer<N, DUMMY> \
 	int disconnect_(manager* manager_, Signals::_counter_<N> dummy) \
 	{ \
 		auto sig = manager_->get_signal_optional<RETURN(__VA_ARGS__)>(#NAME, this, get_description()); \
-		LOG(trace) << "[" #NAME " - " << sig->get_signal_type().name() << "]"; \
-		return disconnect_(manager_, Signals::_counter_<N-1>()) + disconnect_from_signal(sig) ? 1 : 0; \
+		if(sig) LOG(trace) << "[" #NAME " - " << sig->get_signal_type().name() << "]"; \
+		return disconnect_(manager_, Signals::_counter_<N-1>()) + (disconnect_from_signal(sig) ? 1 : 0); \
 	} \
 
 #define SLOT_1(RETURN, N, NAME) \
@@ -365,7 +365,7 @@ template<typename DUMMY> struct signal_registerer<N, DUMMY> \
 		if(name == #NAME) \
 		{ \
 			auto sig = manager_->get_signal_optional<RETURN()>(#NAME, this, get_description()); \
-			LOG(trace) << "[" #NAME  " - " << sig->get_signal_type().name() << "]"; \
+			if(sig) LOG(trace) << "[" #NAME  " - " << sig->get_signal_type().name() << "]"; \
 			return disconnect_by_name(name, manager_, Signals::_counter_<N-1>()) + disconnect_from_signal(sig) ? 1 : 0; \
 		} \
 		return disconnect_by_name(name, manager_, Signals::_counter_<N-1>()); \
@@ -373,8 +373,8 @@ template<typename DUMMY> struct signal_registerer<N, DUMMY> \
 	int disconnect_(manager* manager_, Signals::_counter_<N> dummy) \
 	{ \
 		auto sig = manager_->get_signal_optional<RETURN()>(#NAME); \
-		LOG(trace) << "[" #NAME  " - " << sig->get_signal_type().name() << "]"; \
-		return disconnect_(manager_, Signals::_counter_<N-1>()) + disconnect_from_signal(sig) ? 1 : 0; \
+		if(sig) LOG(trace) << "[" #NAME  " - " << sig->get_signal_type().name() << "]"; \
+		return disconnect_(manager_, Signals::_counter_<N-1>()) + (disconnect_from_signal(sig) ? 1 : 0); \
 	} \
 
 #define SLOT_2(RETURN, N, NAME, ...) SLOT__(NAME, N, RETURN, __VA_ARGS__)
@@ -402,9 +402,9 @@ template<typename DUMMY> struct signal_registerer<N, DUMMY> \
 typedef CLASS_NAME THIS_CLASS;      \
 template<int N, typename DUMMY> struct signal_registerer \
 { \
-	template<class C> static void Register(C* obj, manager* _sig_manager) \
+	template<class C> static int Register(C* obj, manager* _sig_manager) \
     { \
-        signal_registerer<N-1, DUMMY>::Register(obj, _sig_manager); \
+        return signal_registerer<N-1, DUMMY>::Register(obj, _sig_manager); \
     } \
     static void RegisterStatic(Signals::signal_registry* registry) \
     { \
@@ -420,7 +420,7 @@ template<int N, typename DUMMY> struct slot_registerer \
 }; \
 template<typename DUMMY> struct signal_registerer<N_, DUMMY> \
 { \
-	template<class C> static void Register(C* obj, manager* _sig_manager) {} \
+	template<class C> static int Register(C* obj, manager* _sig_manager) {return 0;} \
     static void RegisterStatic(Signals::signal_registry* registry){} \
 }; \
 template<typename DUMMY> struct slot_registerer<N_, DUMMY> \
@@ -484,9 +484,9 @@ typedef CLASS_NAME THIS_CLASS; \
 typedef PARENT PARENT_CLASS;  \
 template<int N, typename DUMMY> struct signal_registerer \
 { \
-	template<class C> static void Register(C* obj, manager* _sig_manager) \
+	template<class C> static int Register(C* obj, manager* _sig_manager) \
     { \
-        signal_registerer<N-1, DUMMY>::Register(obj, _sig_manager); \
+        return signal_registerer<N-1, DUMMY>::Register(obj, _sig_manager); \
     } \
     static void RegisterStatic(Signals::signal_registry* registry) \
     { \
@@ -502,7 +502,7 @@ template<int N, typename DUMMY> struct slot_registerer \
 }; \
 template<typename DUMMY> struct signal_registerer<N_, DUMMY> \
 { \
-	template<class C> static void Register(C* obj, manager* _sig_manager) {} \
+	template<class C> static int Register(C* obj, manager* _sig_manager) {return 0;} \
     static void RegisterStatic(Signals::signal_registry* registry){} \
 }; \
 template<typename DUMMY> struct slot_registerer<N_, DUMMY> \
@@ -583,20 +583,42 @@ namespace Signals
 	};
 }
 
+
 #define SIGNALS_END_(N) \
-template<typename T> int call_parent(Signals::signal_manager* manager, typename std::enable_if<Signals::has_parent<T>::value, void>::type* = nullptr) \
+template<typename T> int call_parent_setup(Signals::signal_manager* manager, typename std::enable_if<Signals::has_parent<T>::value, void>::type* = nullptr) \
 { \
 	LOG(trace) << typeid(T::PARENT_CLASS).name(); \
     return T::PARENT_CLASS::setup_signals(manager); \
 } \
-template<typename T> void call_parent(Signals::signal_manager* manager, typename std::enable_if<!Signals::has_parent<T>::value, void>::type* = nullptr){ } \
+template<typename T> int call_parent_setup(Signals::signal_manager* manager, typename std::enable_if<!Signals::has_parent<T>::value, void>::type* = nullptr) \
+{ \
+	return 0; \
+} \
+template<typename T> int call_parent_connect_by_name(const std::string& name, Signals::signal_manager* manager, typename std::enable_if<Signals::has_parent<T>::value, void>::type* = nullptr) \
+{ \
+	LOG(trace) << typeid(T::PARENT_CLASS).name(); \
+    return T::PARENT_CLASS::connect_by_name(name, manager); \
+} \
+template<typename T> int call_parent_connect_by_name(const std::string& name, Signals::signal_manager* manager, typename std::enable_if<!Signals::has_parent<T>::value, void>::type* = nullptr) \
+{ \
+	return 0; \
+} \
+template<typename T> bool call_parent_connect(const std::string& name, Signals::signal_base* signal, typename std::enable_if<Signals::has_parent<T>::value, void>::type* = nullptr) \
+{ \
+	LOG(trace) << typeid(T::PARENT_CLASS).name(); \
+    return T::PARENT_CLASS::connect(name, signal); \
+} \
+template<typename T> bool call_parent_connect(const std::string& name, Signals::signal_base* signal, typename std::enable_if<!Signals::has_parent<T>::value, void>::type* = nullptr) \
+{ \
+	return false; \
+} \
 virtual int setup_signals(Signals::signal_manager* manager) \
 { \
-    call_parent<THIS_CLASS>(manager, nullptr); \
-	LOG(trace) << "Initializing signal objets and setting up automatically registered slots"; \
+    int parent_signal_count = call_parent_setup<THIS_CLASS>(manager, nullptr); \
+	LOG(trace) << "Initializing signal objects and setting up automatically registered slots"; \
     _sig_manager = manager; \
-    signal_registerer<N, int>::Register(this, _sig_manager); \
-    return connect(manager); \
+    parent_signal_count += signal_registerer<N, int>::Register(this, _sig_manager); \
+    return connect(manager) + parent_signal_count; \
 } \
 struct static_registration \
 {  \
@@ -617,11 +639,14 @@ struct static_registration \
 }; \
 bool connect(std::string name, Signals::signal_base* signal) \
 {  \
+	if(call_parent_connect<THIS_CLASS>(name, signal, nullptr)) \
+		return true; \
     return connect_(name, signal, Signals::_counter_<N-1>()); \
 } \
 int connect_by_name(const std::string& name, manager* manager) \
 { \
-	return connect_(name, manager, Signals::_counter_<N-1>()); \
+	int parent_count = call_parent_connect_by_name<THIS_CLASS>(name, manager, nullptr); \
+	return connect_(name, manager, Signals::_counter_<N-1>()) + parent_count; \
 } \
 int connect(manager* manager) \
 { \
@@ -668,7 +693,9 @@ int connect_(Signals::signal_manager* manager, Signals::_counter_<N> dummy) \
 #endif
 #define REGISTER_SLOT_HELPER(NAME, ...) REGISTER_SLOT(NAME);
 
-#define AUTO_SLOT(RETURN, ...) SLOT_DEF(RETURN, __VA_ARGS__); REGISTER_SLOT_HELPER(__VA_ARGS__)
+#define AUTO_SLOT(RETURN, ...) \
+SLOT_DEF(RETURN, __VA_ARGS__); \
+REGISTER_SLOT_HELPER(__VA_ARGS__)
 
 #ifdef _MSC_VER
 #define SIG_SEND(...) BOOST_PP_CAT( BOOST_PP_OVERLOAD(SIGNAL_, __VA_ARGS__ )(__VA_ARGS__, __COUNTER__), BOOST_PP_EMPTY() )
@@ -692,9 +719,7 @@ namespace Signals
 		}
 		// This connects a signal with provided name to this object, if there are slots that can receive it
 		virtual bool connect(std::string name, signal_base* signal) = 0;
-		// This connects all slots that were declared with AUTO_SLOT or with the additional REGISTER_SLOT macro.
-		virtual int connect(signal_manager* manager) = 0;
-		virtual int connect(); // Overload uses member signal manager
+		
 		// This connects all slots with the given name to the provided manager
 		virtual int connect_by_name(const std::string& name, signal_manager* manager) = 0;
 		virtual int connect_by_name(const std::string& name); // Overload uses member signal manager

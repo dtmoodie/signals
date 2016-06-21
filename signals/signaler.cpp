@@ -17,7 +17,7 @@ signaler::~signaler()
 int signaler::setup_signals(signal_manager* mgr)
 {
 	_sig_manager = mgr;
-	return connect(mgr);
+	return 0;
 }
 
 bool signaler::disconnect_from_signal(Signals::signal_base* signal)
@@ -48,11 +48,6 @@ int signaler::disconnect()
 int signaler::disconnect(std::string name)
 {
    return disconnect(name, _sig_manager);
-}
-
-int signaler::connect()
-{
-	return connect(_sig_manager);
 }
 
 int signaler::connect_by_name(const std::string& name)

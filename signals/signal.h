@@ -73,21 +73,4 @@ namespace Signals
             return Loki::TypeInfo(typeid(R(T...)));
         }
     };
-	/*template<class Signature, template<class...>class Sink = signal_sink> class typed_signal : public typed_signal_base<Signature>{ };
-
-    template<class R, class...T, template<class...> class Sink> class typed_signal<R(T...), Sink> : public typed_signal_base<R(T...)>
-	{
-	public:
-		typed_signal(const std::string& description = ""):
-		static sink_constructor<R(T...), Sink<R(T...)>> _sink_constructor;
-			typed_signal_base<R(T...)>(description)
-		{
-			(void)&_sink_constructor;
-		}
-	};
-
-	template<class R, class...T, 
-        template<class> class Combiner,
-        template<class...> class Sink>
-    sink_constructor<R(T...), Sink<R(T...)>> typed_signal<R(T...), Sink>::_sink_constructor;*/
 }

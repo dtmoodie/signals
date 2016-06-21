@@ -117,13 +117,15 @@ namespace Signals
                 tmpss << tmp;
                 tmpss >> val;
             }
+			SIGNAL_EXPORTS void deserialize_impl(std::stringstream& ss, std::string& val, int);
+
             template<typename T> void deserialize_impl(std::stringstream& ss, T& val, unsigned int,
                 typename std::enable_if<!(std::is_integral<T>::value || std::is_floating_point<T>::value)>::type* = 0)
             {
                 LOG(debug) << "Non specialized deserialize called for " << typeid(T).name();
             }
 #endif
-            template<int N, class... T> class tuple_serializer
+			template<int N, class... T> class tuple_serializer
             {
             public:
                 static void deserialize(std::stringstream& ss, std::tuple<T...>& args)
@@ -149,6 +151,14 @@ namespace Signals
                     serialize_impl(ss, std::get<0>(args), 0);
                 }
             };
+
+			// Specialization for a signal accepting only one parameter
+			template<> class SIGNAL_EXPORTS tuple_serializer<0, std::string>
+			{
+			public:
+				static void deserialize(std::stringstream& ss, std::tuple<std::string>& args);
+				static void serialize(std::stringstream& ss, std::tuple<std::string>& args);
+			};
 
 			template<class T1, class ... Ts> class SIGNAL_EXPORTS Serializer<T1, Ts...> : public Serializer<Ts...>
 			{

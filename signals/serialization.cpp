@@ -37,6 +37,7 @@ void factory::register_proxy(std::function<serialization_proxy_base*()> function
 	// Currently this funcitonality is broken on msvc for an unknown reason.
 	registry[type] = function;
 #endif
+	registry[type] = function;
 }
 
 factory* factory::instance()
@@ -52,4 +53,35 @@ void serialization_proxy_base::install(signal_base* signal)
 void serialization_proxy_base::send(signal_base* signal, std::string string)
 {
 	LOG(debug) << "Default emit called for " << signal->get_signal_type().name();
+}
+
+void Signals::serialization::text::deserialize_impl(std::stringstream& ss, std::string& val, int)
+{
+	if(ss.peek() == '\"')
+	{
+		ss.get();
+		std::getline(ss, val, '\"');
+		std::string dump;
+		std::getline(ss, dump, '!');
+	}else
+	{
+		std::getline(ss, val, '!');
+		if(val.at(0) == ' ')
+		{
+			val = val.substr(1);
+		}
+		if(val.at(val.size() - 1) == ' ')
+		{
+			val = val.substr(0, val.size() - 1);
+		}
+	}
+}
+
+void Signals::serialization::text::tuple_serializer<0, std::string>::deserialize(std::stringstream& ss, std::tuple<std::string>& args)
+{
+	std::get<0>(args) = ss.str();
+}
+void Signals::serialization::text::tuple_serializer<0, std::string>::serialize(std::stringstream& ss, std::tuple<std::string>& args)
+{
+	ss << std::get<0>(args);
 }

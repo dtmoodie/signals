@@ -12,8 +12,9 @@ class test_receiver: public Signals::signaler
 {
 public:
 	SIGNALS_BEGIN(test_receiver)
-		AUTO_SLOT(void, auto_slot);
-		AUTO_SLOT(void, auto_slot, int);
+		SLOT_DEF(void, auto_slot);
+		SLOT_DEF(void, auto_slot, int);
+		REGISTER_SLOT(auto_slot);
 		SLOT_DEF(void, test_slot);
 		SLOT_DEF(void, test_slot, int);
 		SLOT_DEF(void, test_slot, int, int);
@@ -60,7 +61,8 @@ class test_derived_receiver: public test_receiver
 {
 public:
 	SIGNALS_BEGIN(test_derived_receiver, test_receiver);
-		AUTO_SLOT(void, auto_slot);
+		SLOT_DEF(void, auto_slot);
+		REGISTER_SLOT(auto_slot);
 		SLOT_DEF(void, test_slot);
 	SIGNALS_END;
 	int derived_count0;
@@ -121,9 +123,12 @@ class simple_receiver: public Signals::signaler
 {
 public:
 	SIGNALS_BEGIN(simple_receiver);
-		AUTO_SLOT(void, test1);
-		AUTO_SLOT(void, test2);
-		AUTO_SLOT(void, test3);
+		SLOT_DEF(void, test1);
+		REGISTER_SLOT(test1);
+		SLOT_DEF(void, test2);
+		REGISTER_SLOT(test2);
+		SLOT_DEF(void, test3);
+		REGISTER_SLOT(test3);
 	SIGNALS_END;
 	int count1, count2, count3;
 };
@@ -135,13 +140,14 @@ BOOST_AUTO_TEST_CASE(SignalManager)
 	Signals::signal_manager manager;
 	simple_receiver obj;
 	obj.count1 = 0; obj.count2 = 0; obj.count3 = 0;
-	BOOST_CHECK_EQUAL(obj.setup_signals(&manager), 3);
+	BOOST_CHECK_EQUAL(obj.connect(&manager), 3);
 	(*manager.get_signal<void(void)>("test1"))();
 	BOOST_CHECK_EQUAL(obj.count1, 1);
 	(*manager.get_signal<void(void)>("test2"))();
 	BOOST_CHECK_EQUAL(obj.count2, 1);
 	(*manager.get_signal<void(void)>("test3"))();
 	BOOST_CHECK_EQUAL(obj.count3, 1);
+	BOOST_CHECK_EQUAL(obj.disconnect(&manager), 3);
 }
 
 class base: public Signals::signaler
@@ -183,7 +189,7 @@ BOOST_AUTO_TEST_CASE(TestDerivedOverload)
 	derived derived_obj;
 	derived_obj.setup_signals(&mgr1);
 	derived_obj.count = 0;
-	BOOST_CHECK_EQUAL(derived_obj.Signals::signaler::connect_by_name("overloaded_slot"), 1);
+	BOOST_CHECK_EQUAL(derived_obj.Signals::signaler::connect_by_name("overloaded_slot"), 2);
 	(*mgr1.get_signal<void(void)>("overloaded_slot"))();
 	BOOST_CHECK_EQUAL(derived_obj.count, 2);
 }
@@ -227,7 +233,7 @@ BOOST_AUTO_TEST_CASE(AutoOverloadedSlot)
 	auto_derived derived_obj;
 	derived_obj.setup_signals(&mgr1);
 	derived_obj.count = 0;
-	BOOST_CHECK_EQUAL(derived_obj.Signals::signaler::connect_by_name("overloaded_slot"), 1);
+	BOOST_CHECK_EQUAL(derived_obj.Signals::signaler::connect_by_name("overloaded_slot"), 2);
 	(*mgr1.get_signal<void(void)>("overloaded_slot"))();
 	BOOST_CHECK_EQUAL(derived_obj.count, 2);
 }
