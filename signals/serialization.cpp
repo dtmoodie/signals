@@ -37,7 +37,11 @@ void factory::register_proxy(std::function<serialization_proxy_base*()> function
 	// Currently this funcitonality is broken on msvc for an unknown reason.
 	registry[type] = function;
 #endif
-	registry[type] = function;
+	auto itr = registry.find(type);
+	if(itr == registry.end())
+	{
+		registry[type] = function;
+	}
 }
 
 factory* factory::instance()
