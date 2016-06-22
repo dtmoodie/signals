@@ -18,6 +18,37 @@
   #include <execinfo.h>
   #include <cxxabi.h>
 #endif
+#ifdef LOG
+#undef LOG
+#endif
+#ifdef CHECK_EQ
+#undef CHECK_EQ
+#endif
+#ifdef CHECK_NE
+#undef CHECK_NE
+#endif
+#ifdef CHECK_LE
+#undef CHECK_LE
+#endif
+#ifdef CHECK_LT
+#undef CHECK_LT
+#endif
+#ifdef CHECK_GE
+#undef CHECK_GE
+#endif
+#ifdef CHECK_GT
+#undef CHECK_GT
+#endif
+#ifdef CHECK_OP
+#undef CHECK_OP
+#endif
+#ifdef ASSERT_OP
+#undef ASSERT_OP
+#endif
+#ifdef LOG_FIRST_N
+#undef LOG_FIRST_N
+#endif
+
 
 #define LOG(severity) BOOST_LOG_TRIVIAL(severity) << "[" << __FUNCTION__ << "] "
 #define DOIF(condition, expression, severity) if(condition) { LOG(severity) << #condition << " is true, thus performing " << #expression; expression;} else { LOG(severity) << #condition << " failed";}
