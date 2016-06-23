@@ -59,12 +59,14 @@
 #define LOGIF_EQ(lhs, rhs, severity) if(lhs == rhs)  LOG(severity) << "if(" << #lhs << " == " << #rhs << ")" << "[" << lhs << " == " << rhs << "]";
 #define LOGIF_NEQ(lhs, rhs, severity) if(lhs != rhs) LOG(severity) << "if(" << #lhs << " != " << #rhs << ")" << "[" << lhs << " != " << rhs << "]";
 
-#define ASSERT_OP(op, lhs, rhs) \
+#define ASSERT_OP(op, lhs, rhs) if(!(lhs op rhs)) Signals::throw_on_destroy(__FUNCTION__, __FILE__, __LINE__).stream()
+
+/*#define ASSERT_OP(op, lhs, rhs) \
     if(lhs op rhs) { \
         LOG(debug) << #lhs << " " << #op << " " << #rhs << " [ " << lhs << " " << #op << " " << rhs << "]"; \
         std::stringstream ss; \
         ss << #lhs " " #op " " #rhs " [" << lhs << " " #op " " << rhs << "]"; \
-        throw ExceptionWithCallStack<std::exception>(ss.str()); }
+        throw ExceptionWithCallStack<std::exception>(ss.str()); }*/
 
 #define ASSERT_EQ(lhs, rhs)  ASSERT_OP(==, lhs, rhs)
 #define ASSERT_NE(lhs, rhs)  ASSERT_OP(!=, lhs, rhs)
@@ -73,9 +75,8 @@
 #define ASSERT_GE(lhs, rhs)  ASSERT_OP(>=, lhs, rhs)
 #define ASSERT_GT(lhs, rhs)  ASSERT_OP(> , lhs, rhs)
 
-#define CHECK_OP(op, lhs, rhs, severity) \
-    if(lhs op rhs) \
-        LOG(severity) << #lhs << " " << #op << " " << #rhs << " [ " << lhs << " " << #op << " " << rhs << "]"
+#define CHECK_OP(op, lhs, rhs, severity) if(lhs op rhs)  LOG(severity) << #lhs << " " << #op << " " << #rhs << " [ " << lhs << " " << #op << " " << rhs << "]"
+
 
 #define CHECK_EQ(lhs, rhs, severity) CHECK_OP(==, lhs, rhs, severity)
 #define CHECK_NE(lhs, rhs, severity) CHECK_OP(!=, lhs, rhs, severity)
@@ -88,6 +89,17 @@
 
 namespace Signals
 {
+    class SIGNAL_EXPORTS throw_on_destroy {
+    public:
+        throw_on_destroy(const char* function, const char* file, int line);
+        std::ostringstream &stream();
+        ~throw_on_destroy();
+
+    private:
+        std::ostringstream log_stream_;
+        throw_on_destroy(const throw_on_destroy&);
+        void operator=(const throw_on_destroy&);
+    };
     void SIGNAL_EXPORTS collect_callstack(size_t skipLevels, bool makeFunctionNamesStandOut, const std::function<void(const std::string&)>& write);
     std::string SIGNAL_EXPORTS print_callstack(size_t skipLevels, bool makeFunctionNamesStandOut);
 	std::string SIGNAL_EXPORTS print_callstack(size_t skipLevels, bool makeFunctionNamesStandOut, std::stringstream& ss);
@@ -115,4 +127,16 @@ namespace Signals
 	protected:
 		std::string m_callStack;
 	};
+    template<> class ExceptionWithCallStack<std::string>: public std::string, public IExceptionWithCallStackBase
+    {
+     	public:
+		ExceptionWithCallStack(const std::string& msg, const std::string& callstack) :
+			std::string(msg), m_callStack(callstack)
+		{ }
+        
+		virtual const char * CallStack() const override { return m_callStack.c_str(); }
+
+	protected:
+		std::string m_callStack;
+    };
 }

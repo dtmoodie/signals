@@ -284,4 +284,18 @@ static inline wcstring utf16(const std::wstring& p)
 
 #endif
     }
-    
+Signals::throw_on_destroy::throw_on_destroy(const char* function, const char* file, int line) 
+{
+    log_stream_ <<"[" << file << ":"
+                      << line << "]";
+}
+std::ostringstream &Signals::throw_on_destroy::stream()
+{ 
+    return log_stream_; 
+}
+Signals::throw_on_destroy::~throw_on_destroy() 
+{
+    std::stringstream ss;
+    LOG(debug) << "Exception at" << Signals::print_callstack(0, true, ss) << log_stream_.str();
+	throw Signals::ExceptionWithCallStack<std::string>(log_stream_.str(), ss.str());
+}
