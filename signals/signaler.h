@@ -691,7 +691,9 @@ int connect_(Signals::signal_manager* manager, Signals::_counter_<N> dummy) \
 #else
 #define SLOT_OVERLOAD(NAME, ...) BOOST_PP_OVERLOAD(SLOT_OVERLOAD_, __VA_ARGS__)(NAME, __COUNTER__, __VA_ARGS__)
 #endif
-#define REGISTER_SLOT_HELPER(NAME, ...) REGISTER_SLOT(NAME);
+
+#define CALL_REGISTER_SLOT(name) REGISTER_SLOT(name)
+#define REGISTER_SLOT_HELPER(NAME, ...) CALL_REGISTER_SLOT(NAME);
 
 #define AUTO_SLOT(RETURN, ...) \
 SLOT_DEF(RETURN, __VA_ARGS__); \
