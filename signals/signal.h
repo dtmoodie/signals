@@ -15,25 +15,25 @@
 #include <list>
 namespace Signals
 {
-	template<class R, class...T> class typed_signal_base<R(T...)> : public signal_base, public meta_signal<R(T...)>, public boost::signals2::signal<R(T...)>
+    template<class R, class...T> class typed_signal_base<R(T...)> : public signal_base, public meta_signal<R(T...)>, public boost::signals2::signal<R(T...)>
     {
     protected:
     public:
-		typed_signal_base(const std::string& description = "", size_t owning_thread_ = get_this_thread()) :
-			signal_base(description, owning_thread_)
+        typed_signal_base(const std::string& description = "", size_t owning_thread_ = get_this_thread()) :
+            signal_base(description, owning_thread_)
         {
         }
-		~typed_signal_base()
-		{
-		}
+        ~typed_signal_base()
+        {
+        }
         virtual void add_log_sink(std::shared_ptr<signal_sink_base> sink, size_t destination_thread = get_this_thread())
         {            
         }
-		void disconnect(const std::function<R(T...)>& f)
-		{
-			boost::signals2::signal<R(T...)>::disconnect(f);
-		}
-		std::shared_ptr<connection> connect(const std::function<R(T...)>& f, size_t destination_thread = get_this_thread(), bool force_queue = false, void* This = nullptr)
+        void disconnect(const std::function<R(T...)>& f)
+        {
+            boost::signals2::signal<R(T...)>::disconnect(f);
+        }
+        std::shared_ptr<connection> connect(const std::function<R(T...)>& f, size_t destination_thread = get_this_thread(), bool force_queue = false, void* This = nullptr)
         {
             if(destination_thread != get_this_thread() || force_queue)
             {
@@ -46,19 +46,19 @@ namespace Signals
                         f(args_...);
                     },args...), destination_thread, This);
                 };
-				if(This == nullptr)
-					return std::shared_ptr<connection>(new connection(boost::signals2::signal<R(T...)>::connect(f_)));
-				else
-					return std::shared_ptr<connection>(new class_connection(boost::signals2::signal<R(T...)>::connect(f_), This));
+                if(This == nullptr)
+                    return std::shared_ptr<connection>(new connection(boost::signals2::signal<R(T...)>::connect(f_)));
+                else
+                    return std::shared_ptr<connection>(new class_connection(boost::signals2::signal<R(T...)>::connect(f_), This));
             }else
             {
                 return std::shared_ptr<connection>(new connection(boost::signals2::signal<R(T...)>::connect(f)));
             }
         }
-		std::shared_ptr<connection> connect_log_sink(const std::function<void(T...)>& f, size_t destination_thread = get_this_thread())
-		{
+        std::shared_ptr<connection> connect_log_sink(const std::function<void(T...)>& f, size_t destination_thread = get_this_thread())
+        {
             return connect(f, destination_thread);
-		}
+        }
 
         std::shared_ptr<connection> connect(const std::function<R(T...)>& f, int dest_thread_type, bool force_queued = false, void* This = nullptr)
         {

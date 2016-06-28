@@ -28,50 +28,50 @@ namespace Signals
     class signal_base;
     template<class Sig> class typed_signal_base;
 
-	template<class T, template<class> class C, template<class...> class S> class typed_signal;
+    template<class T, template<class> class C, template<class...> class S> class typed_signal;
 
-	namespace serialization
-	{
+    namespace serialization
+    {
         template<int ...S, class R, class ... T>
           void call_signal(seq<S...>, std::tuple<T...>& params, Signals::typed_signal_base<R(T...)>* sig) 
           {
               (*sig)(std::get<S>(params)...);
           }
 
-		namespace text
-		{
-			class SIGNAL_EXPORTS serialization_proxy_base
-			{
+        namespace text
+        {
+            class SIGNAL_EXPORTS serialization_proxy_base
+            {
             protected:
                 std::ostream* _dest;
-			public:
+            public:
                 serialization_proxy_base();
                 virtual ~serialization_proxy_base();
                 virtual void set_output_iostream(std::ostream* stream);
-				virtual void install(signal_base* signal);
-				virtual void send(signal_base* signal, std::string str);
-			};
+                virtual void install(signal_base* signal);
+                virtual void send(signal_base* signal, std::string str);
+            };
 
-			class SIGNAL_EXPORTS factory
-			{
-				std::map<Loki::TypeInfo, std::function<serialization_proxy_base*()>> registry;
-			public:
-				static factory* instance();
-				serialization_proxy_base* get_proxy(signal_base* signal);
-				serialization_proxy_base* get_proxy(Loki::TypeInfo type);
-				void register_proxy(std::function<serialization_proxy_base*()> function, Loki::TypeInfo type);
-			};
+            class SIGNAL_EXPORTS factory
+            {
+                std::map<Loki::TypeInfo, std::function<serialization_proxy_base*()>> registry;
+            public:
+                static factory* instance();
+                serialization_proxy_base* get_proxy(signal_base* signal);
+                serialization_proxy_base* get_proxy(Loki::TypeInfo type);
+                void register_proxy(std::function<serialization_proxy_base*()> function, Loki::TypeInfo type);
+            };
 
 
 
-			template<class... T> class SIGNAL_EXPORTS Serializer
-			{
-			public:
-				static void serialize(std::ostream* dest, T... args)
-				{
+            template<class... T> class SIGNAL_EXPORTS Serializer
+            {
+            public:
+                static void serialize(std::ostream* dest, T... args)
+                {
 
-				}
-			};
+                }
+            };
 
 #ifdef SUPPORTS_EXPRESSION_SFINAE
             // ********************* serialize SFINAE *****************************************
@@ -117,7 +117,7 @@ namespace Signals
                 tmpss << tmp;
                 tmpss >> val;
             }
-			SIGNAL_EXPORTS void deserialize_impl(std::stringstream& ss, std::string& val, int);
+            SIGNAL_EXPORTS void deserialize_impl(std::stringstream& ss, std::string& val, int);
 
             template<typename T> void deserialize_impl(std::stringstream& ss, T& val, unsigned int,
                 typename std::enable_if<!(std::is_integral<T>::value || std::is_floating_point<T>::value)>::type* = 0)
@@ -125,7 +125,7 @@ namespace Signals
                 LOG(debug) << "Non specialized deserialize called for " << typeid(T).name();
             }
 #endif
-			template<int N, class... T> class tuple_serializer
+            template<int N, class... T> class tuple_serializer
             {
             public:
                 static void deserialize(std::stringstream& ss, std::tuple<T...>& args)
@@ -152,69 +152,69 @@ namespace Signals
                 }
             };
 
-			// Specialization for a signal accepting only one parameter
-			template<> class SIGNAL_EXPORTS tuple_serializer<0, std::string>
-			{
-			public:
-				static void deserialize(std::stringstream& ss, std::tuple<std::string>& args);
-				static void serialize(std::stringstream& ss, std::tuple<std::string>& args);
-			};
+            // Specialization for a signal accepting only one parameter
+            template<> class SIGNAL_EXPORTS tuple_serializer<0, std::string>
+            {
+            public:
+                static void deserialize(std::stringstream& ss, std::tuple<std::string>& args);
+                static void serialize(std::stringstream& ss, std::tuple<std::string>& args);
+            };
 
-			template<class T1, class ... Ts> class SIGNAL_EXPORTS Serializer<T1, Ts...> : public Serializer<Ts...>
-			{
-			public:
-				static void serialize(std::ostream* dest, T1 arg1, Ts... args)
-				{
+            template<class T1, class ... Ts> class SIGNAL_EXPORTS Serializer<T1, Ts...> : public Serializer<Ts...>
+            {
+            public:
+                static void serialize(std::ostream* dest, T1 arg1, Ts... args)
+                {
                     if(dest)
                         *dest << arg1 << " ";
                     else
-					    std::cout << arg1 << " ";
-					Serializer<Ts...>::serialize(dest, args...);
-				}
-				static void serialize_ss(std::stringstream& ss, T1 arg1, Ts... args)
-				{
-					ss << arg1 << " ! ";
-					Serializer<Ts...>::serialize_ss(ss, args...);
-				}
-				static void deserialize(std::stringstream& ss, T1& arg1, Ts&... args)
-				{
-					std::string tmp;
-					std::getline(ss, tmp, '!');
-					std::stringstream tmpss;
-					tmpss << tmp;
-					tmpss >> arg1;
-					Serializer<Ts...>::deserialize(ss, args...);
+                        std::cout << arg1 << " ";
+                    Serializer<Ts...>::serialize(dest, args...);
+                }
+                static void serialize_ss(std::stringstream& ss, T1 arg1, Ts... args)
+                {
+                    ss << arg1 << " ! ";
+                    Serializer<Ts...>::serialize_ss(ss, args...);
+                }
+                static void deserialize(std::stringstream& ss, T1& arg1, Ts&... args)
+                {
+                    std::string tmp;
+                    std::getline(ss, tmp, '!');
+                    std::stringstream tmpss;
+                    tmpss << tmp;
+                    tmpss >> arg1;
+                    Serializer<Ts...>::deserialize(ss, args...);
                     
                 }
-			};
+            };
 
-			template<typename Sig> class SIGNAL_EXPORTS serialization_proxy: public serialization_proxy_base
-			{
-			};
-			template<class R, class... T> class SIGNAL_EXPORTS serialization_proxy<R(T...)>: public serialization_proxy_base
-			{
+            template<typename Sig> class SIGNAL_EXPORTS serialization_proxy: public serialization_proxy_base
+            {
+            };
+            template<class R, class... T> class SIGNAL_EXPORTS serialization_proxy<R(T...)>: public serialization_proxy_base
+            {
                 std::shared_ptr<connection> _connection;
-			public:
-				void install(signal_base* signal)
-				{
+            public:
+                void install(signal_base* signal)
+                {
                     auto typed_sig = dynamic_cast<typed_signal_base<R(T...)>*>(signal);
                     if(typed_sig)
                     {
                         _connection = typed_sig->connect_log_sink(my_bind(&serialization_proxy<void(T...)>::receive, this,  make_int_sequence<sizeof...(T)>{}));
                     }
-				}
-				void send(signal_base* signal, std::string str)
-				{
+                }
+                void send(signal_base* signal, std::string str)
+                {
                     auto typed_sig = dynamic_cast<typed_signal_base<R(T...)>*>(signal);
-					if (typed_sig)
-					{
-						std::stringstream ss;
-						ss << str;
+                    if (typed_sig)
+                    {
+                        std::stringstream ss;
+                        ss << str;
                         std::tuple<T...> args;
-						tuple_serializer<sizeof...(T) - 1, T...>::deserialize(ss, args);
+                        tuple_serializer<sizeof...(T) - 1, T...>::deserialize(ss, args);
                         call_signal(typename gens<sizeof...(T)>::type(), args, typed_sig);
-					}
-				}
+                    }
+                }
                 void receive(T... args)
                 {
                     Serializer<T...>::serialize(_dest, args...);
@@ -223,48 +223,48 @@ namespace Signals
                     else
                         std::cout << "\n";
                 }
-			};
+            };
             template<class R> class SIGNAL_EXPORTS serialization_proxy<R()>: public serialization_proxy_base
             {
                 std::shared_ptr<connection> _connection;
             public:
-				void install(signal_base* signal)
-				{
+                void install(signal_base* signal)
+                {
                     auto typed_sig = dynamic_cast<typed_signal_base<R()>*>(signal);
                     if(typed_sig)
                     {
                         _connection = typed_sig->connect_log_sink(std::bind(&serialization_proxy<R()>::receive, this));
                     }
-				}
-				void send(signal_base* signal, std::string str)
-				{
+                }
+                void send(signal_base* signal, std::string str)
+                {
                     auto typed_sig = dynamic_cast<typed_signal_base<R()>*>(signal);
-					if (typed_sig)
-					{
-						(*typed_sig)();
-					}
-				}
+                    if (typed_sig)
+                    {
+                        (*typed_sig)();
+                    }
+                }
                 void receive()
                 {
                     
                 }
             };
 
-			template<typename Sig> class constructor
-			{
-			};
-			template<typename R, typename...T> class constructor<R(T...)>
-			{
-			public:
-				constructor()
-				{
-					factory::instance()->register_proxy(std::bind(&constructor<R(T...)>::construct), Loki::TypeInfo(typeid(R(T...))));
-				}
-				static serialization_proxy_base* construct()
-				{
-					return new serialization_proxy<R(T...)>();
-				}
-			};
-		} // namespace text
-	} // namespace serialization
+            template<typename Sig> class constructor
+            {
+            };
+            template<typename R, typename...T> class constructor<R(T...)>
+            {
+            public:
+                constructor()
+                {
+                    factory::instance()->register_proxy(std::bind(&constructor<R(T...)>::construct), Loki::TypeInfo(typeid(R(T...))));
+                }
+                static serialization_proxy_base* construct()
+                {
+                    return new serialization_proxy<R(T...)>();
+                }
+            };
+        } // namespace text
+    } // namespace serialization
 } // namespace Signals
