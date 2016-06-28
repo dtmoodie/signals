@@ -152,13 +152,13 @@ static inline wcstring utf16(const std::wstring& p)
     {
         std::stringstream ss;
         
-		return print_callstack(skipLevels, makeFunctionNamesStandOut, ss);
+        return print_callstack(skipLevels, makeFunctionNamesStandOut, ss);
     }
-	std::string Signals::print_callstack(size_t skipLevels, bool makeFunctionNamesStandOut, std::stringstream& ss)
-	{
-		collect_callstack(skipLevels, makeFunctionNamesStandOut, [&ss](const std::string& str) {ss << str; });
-		return ss.str();
-	}
+    std::string Signals::print_callstack(size_t skipLevels, bool makeFunctionNamesStandOut, std::stringstream& ss)
+    {
+        collect_callstack(skipLevels, makeFunctionNamesStandOut, [&ss](const std::string& str) {ss << str; });
+        return ss.str();
+    }
     void Signals::collect_callstack(size_t skipLevels, bool makeFunctionNamesStandOut, const std::function<void(const std::string&)>& write)
     {
 
@@ -297,5 +297,5 @@ Signals::throw_on_destroy::~throw_on_destroy()
 {
     std::stringstream ss;
     LOG(debug) << "Exception at" << Signals::print_callstack(0, true, ss) << log_stream_.str();
-	throw Signals::ExceptionWithCallStack<std::string>(log_stream_.str(), ss.str());
+    throw Signals::ExceptionWithCallStack<std::string>(log_stream_.str(), ss.str());
 }

@@ -6,37 +6,37 @@ namespace Signals
     {
 
     }; 
-	template<class R, class...T> class signal_sink<R(T...)>: public signal_sink_base
-	{
-	public:
-		static const char* sink_type()
-		{
-			return "null_sink";
-		}
-		virtual void handle_signal(T... args)
-		{
-			
-		}
-		virtual void handle_return(R ret)
-		{
+    template<class R, class...T> class signal_sink<R(T...)>: public signal_sink_base
+    {
+    public:
+        static const char* sink_type()
+        {
+            return "null_sink";
+        }
+        virtual void handle_signal(T... args)
+        {
+            
+        }
+        virtual void handle_return(R ret)
+        {
 
-		}
-	};
-	template<class...T> class signal_sink<void(T...)> : public signal_sink_base
-	{
-	public:
-		static const char* sink_type()
-		{
-			return "null_sink";
-		}
-		virtual void handle_signal(T... args)
-		{
+        }
+    };
+    template<class...T> class signal_sink<void(T...)> : public signal_sink_base
+    {
+    public:
+        static const char* sink_type()
+        {
+            return "null_sink";
+        }
+        virtual void handle_signal(T... args)
+        {
 
-		}
-		virtual void handle_return()
-		{
+        }
+        virtual void handle_return()
+        {
 
-		}
-	};
+        }
+    };
 }
   

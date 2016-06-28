@@ -10,7 +10,7 @@ namespace Signals
         }
     };
     
-	/*template<template<class, class...> class S, class T> class signal_with_sink {};
+    /*template<template<class, class...> class S, class T> class signal_with_sink {};
 
     template<template<class, class...> class SINK, class R, class...T> class signal_with_sink<SINK, R(T...)> : public signal<R(T...)>
     {
