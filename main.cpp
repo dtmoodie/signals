@@ -187,8 +187,8 @@ int main()
 		}
         // By connecting the signal through the signal manager with corresponding description, line, and file information.  A signal map can be generated so that we know what is sending and receiving a signal
         // The test signaler class automatically registers to the signal manager as a sender of a particular signal.  Currently senders and receivers are not deregistered with disconnection of signals.
-		auto connection = Signals::signal_manager::get_instance()->connect<void(int)>("test1", [](int i)->void{LOG(info) << "Test sink: " << i; }, get_this_thread(), "Test lambda receiver", __LINE__, __FILE__);
-        
+		auto connection = Signals::signal_manager::get_instance()->connect<void(int)>("test1", [](int i)->void{LOG(info) << "Test sink: " << i; }, nullptr, get_this_thread());
+        Signals::signal_manager::get_instance()->register_receiver(Loki::TypeInfo(typeid(void(int))), "test1", __LINE__ -1, __FILE__, "Test lambda receiver", "on receiver, log input value to boost log info");
 		
 	}
 	Signals::signal_manager::get_instance()->print_signal_map();

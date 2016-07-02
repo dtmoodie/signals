@@ -19,13 +19,6 @@ namespace Signals
     {
     protected:
     public:
-		typed_signal_base(const std::string& description = "", size_t owning_thread_ = get_this_thread()) :
-			signal_base(description, owning_thread_)
-        {
-        }
-		~typed_signal_base()
-		{
-		}
         virtual void add_log_sink(std::shared_ptr<signal_sink_base> sink, size_t destination_thread = get_this_thread())
         {            
         }

@@ -114,38 +114,68 @@ std::shared_ptr<signal_base>& signal_manager::get_signal(const std::string& name
 {
     return _signals[type][name];
 }
-void signal_manager::register_sender(Loki::TypeInfo signal_signature, std::string signal_name, Loki::TypeInfo sender_type, signaler* sender_ptr)
+void signal_manager::register_sender(Loki::TypeInfo signal_signature, std::string signal_name, signaler* sender_ptr)
 {
-	_registered_sender_objects[signal_signature][signal_name].push_back(std::make_tuple(sender_type, sender_ptr, sender_ptr->get_description()));
+	register_sender(signal_signature, signal_name, Loki::TypeInfo(typeid(*sender_ptr)), sender_ptr, sender_ptr->get_description(), sender_ptr->get_signal_description(signal_name));
 }
-void signal_manager::register_sender(Loki::TypeInfo signal_signature, std::string signal_name, Loki::TypeInfo sender_type, void* sender_ptr, std::string desc)
+void signal_manager::register_sender(Loki::TypeInfo signal_signature, std::string signal_name, Loki::TypeInfo sender_type, void* sender_ptr, std::string desc, std::string tooltip)
 {
-	auto& vec = _registered_sender_objects[signal_signature][signal_name];
-	if(std::count_if(vec.begin(), vec.end(), [sender_ptr](const std::tuple<Loki::TypeInfo, void*, std::string>& data){return std::get<1>(data) == sender_ptr; }) == 0)
-		vec.push_back(std::make_tuple(sender_type, sender_ptr, desc));
+	sender s;
+    s.description = desc;
+    s.type = sender_type;
+    s.ptr = sender_ptr;
+    s.signature = signal_signature;
+    s.signal_name = signal_name;
+    s.tooltip = tooltip;
+    _registered_senders[signal_signature][signal_name].push_back(s);
 }
-void signal_manager::register_sender(Loki::TypeInfo signal_signature, std::string signal_name, std::string desc, std::string file_name, int line_number)
+void signal_manager::register_sender(Loki::TypeInfo signal_signature, std::string signal_name, std::string desc, std::string file_name, int line_number, std::string tooltip)
 {
-	_registered_senders[signal_signature][signal_name].push_back(std::make_tuple(line_number, file_name, desc));
+    sender s;
+    s.description = desc;
+    s.file = file_name;
+    s.line = line_number;
+    s.signature = signal_signature;
+    s.signal_name = signal_name;
+    s.tooltip = tooltip;
+    _registered_senders[signal_signature][signal_name].push_back(s);
 }
-void signal_manager::remove_sender(void* sender_ptr)
+void signal_manager::remove_sender(void* sender_ptr, std::string name)
 {
 
 }
-void signal_manager::remove_sender(std::string file_name, int line_number)
+void signal_manager::remove_sender(std::string file_name, int line_number, std::string name)
 {
 
 }
 
-void signal_manager::register_receiver(Loki::TypeInfo signal_signature, std::string signal_name, Loki::TypeInfo receiver_type, void* receiver_ptr, std::string desc)
+void signal_manager::register_receiver(Loki::TypeInfo signal_signature, const std::string& signal_name, Loki::TypeInfo receiver_type, void* receiver_ptr, const std::string& desc, const std::string& tooltip)
 {
-	_registered_receiver_objects[signal_signature][signal_name].push_back(std::make_tuple(receiver_type, receiver_ptr, desc));
-}
-void signal_manager::register_receiver(Loki::TypeInfo signal_signature, std::string signal_name, int line_number, std::string file_name, std::string desc)
-{
-	_registered_receivers[signal_signature][signal_name].push_back(std::make_tuple(line_number, file_name, desc));
+	receiver r;
+    r.description = desc;
+    r.tooltip = tooltip;
+    r.ptr = receiver_ptr;
+    r.type = receiver_type;
+    r.signature = signal_signature;
+    r.signal_name = signal_name;
+    _registered_receivers[signal_signature][signal_name].push_back(r);
 }
 
+void signal_manager::register_receiver(Loki::TypeInfo signal_signature, const std::string& signal_name, int line_number, const std::string& file_name, const std::string& desc, const std::string& tooltip)
+{
+	receiver r;
+    r.description = desc;
+    r.tooltip = tooltip;
+    r.line = line_number;
+    r.file = file_name;
+    r.signature = signal_signature;
+    r.signal_name = signal_name;
+    _registered_receivers[signal_signature][signal_name].push_back(r);
+}
+void signal_manager::register_receiver(Loki::TypeInfo signal_signature, const std::string& signal_name, signaler* receiver)
+{
+    register_receiver(signal_signature, signal_name, Loki::TypeInfo(typeid(*receiver)), receiver, receiver->get_description(), receiver->get_slot_description(signal_name));
+}
 std::vector<signal_base*> signal_manager::get_signals(std::string name)
 {
 	std::vector<signal_base*> output;
@@ -189,7 +219,7 @@ std::vector<signal_base*> signal_manager::get_signals()
 
 void signal_manager::print_signal_map()
 {
-	for (auto& type : _signals)
+	/*for (auto& type : _signals)
 	{
 		for (auto& sig : type.second)
 		{
@@ -224,17 +254,101 @@ void signal_manager::print_signal_map()
 			
 		}
 
-	}
+	}*/
 }
-/*
-void signal_registery::register_sender(const std::string& signal_name, Loki::TypeInfo type, void* sender, Loki::TypeInfo signal_signature, signal_manager* mgr, const std::string& desc)
+std::vector<receiver> signal_manager::get_receivers(Loki::TypeInfo type, std::string name)
 {
-	BOOST_LOG(debug) << "Registering signal emitter " << type.name() << " of signal " << signal_name << " with signature " << signal_signature.name();
-	mgr->register_sender(signal_signature, signal_name, type, sender);
+    return _registered_receivers[type][name];
 }
-void signal_registery::register_receiver(const std::string& signal_name, Loki::TypeInfo type, void* receiver, Loki::TypeInfo signal_signature, signal_manager* mgr, const std::string& desc)
+
+std::vector<receiver> signal_manager::get_receivers(Loki::TypeInfo type)
 {
-	BOOST_LOG(debug) << "Registering signal receiver " << type.name() << " of signal " << signal_name << " with signature " << signal_signature.name();
-	mgr->register_receiver(signal_signature, signal_name, type, receiver);
+    std::vector<receiver> output;
+    auto itr = _registered_receivers.find(type);
+    if(itr != _registered_receivers.end())
+    {
+        for(auto& r : itr->second)
+        {
+            output.insert(output.end(), r.second.begin(), r.second.end());
+        }
+    }
+    return output;
 }
-*/
+
+std::vector<receiver> signal_manager::get_receivers(std::string name)
+{
+    std::vector<receiver> output;
+    for(auto& sig_itr : _registered_receivers)
+    {
+        auto name_itr = sig_itr.second.find(name);
+        if(name_itr != sig_itr.second.end())
+        {
+            output.insert(output.end(), name_itr->second.begin(), name_itr->second.end());
+        }
+    }
+    return output;
+}
+std::vector<receiver> signal_manager::get_receivers()
+{
+    std::vector<receiver> output;
+    for(auto& sig : _registered_receivers)
+    {
+        for(auto& name: sig.second)
+        {
+            output.insert(output.end(), name.second.begin(), name.second.end());
+        }
+    }
+    return output;
+}
+std::vector<sender> signal_manager::get_senders(Loki::TypeInfo type, std::string name)
+{
+    return _registered_senders[type][name];
+}
+
+std::vector<sender> signal_manager::get_senders(Loki::TypeInfo type)
+{
+    std::vector<sender> output;
+    auto itr = _registered_senders.find(type);
+    if(itr != _registered_senders.end())
+    {
+        for(auto& r : itr->second)
+        {
+            output.insert(output.end(), r.second.begin(), r.second.end());
+        }
+    }
+    return output;
+}
+
+std::vector<sender> signal_manager::get_senders(std::string name)
+{
+    std::vector<sender> output;
+    for(auto& sig_itr : _registered_senders)
+    {
+        auto name_itr = sig_itr.second.find(name);
+        if(name_itr != sig_itr.second.end())
+        {
+            output.insert(output.end(), name_itr->second.begin(), name_itr->second.end());
+        }
+    }
+    return output;
+}
+std::vector<sender> signal_manager::get_senders()
+{
+        std::vector<sender> output;
+    for(auto& sig : _registered_senders)
+    {
+        for(auto& name: sig.second)
+        {
+            output.insert(output.end(), name.second.begin(), name.second.end());
+        }
+    }
+    return output;
+}
+void Signals::register_sender(signaler* sender, const std::string& signal_name, Loki::TypeInfo signal_signature, signal_manager* mgr)
+{
+    mgr->register_sender(signal_signature, signal_name, sender);
+}
+void Signals::register_receiver(signaler* receiver, const std::string& signal_name, Loki::TypeInfo signal_signature, signal_manager* mgr)
+{
+    mgr->register_receiver(signal_signature, signal_name, receiver);
+}
