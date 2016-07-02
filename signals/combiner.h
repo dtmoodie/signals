@@ -7,7 +7,7 @@ namespace Signals
 {
     template<class R> class SIGNAL_EXPORTS default_combiner
     {
-	public:
+    public:
         void operator()(R val)
         {
             
@@ -23,7 +23,7 @@ namespace Signals
     };
     template<> class SIGNAL_EXPORTS default_combiner<void>
     {
-	public:
+    public:
         void operator()();
         void operator()(std::future<void> val);
         void get_result();
@@ -32,7 +32,7 @@ namespace Signals
     };
     template<> class SIGNAL_EXPORTS default_combiner<bool>
     {
-	public:
+    public:
         default_combiner();
         void operator()(bool val);
         void operator()(std::future<bool> val);

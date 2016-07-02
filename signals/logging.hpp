@@ -102,41 +102,41 @@ namespace Signals
     };
     void SIGNAL_EXPORTS collect_callstack(size_t skipLevels, bool makeFunctionNamesStandOut, const std::function<void(const std::string&)>& write);
     std::string SIGNAL_EXPORTS print_callstack(size_t skipLevels, bool makeFunctionNamesStandOut);
-	std::string SIGNAL_EXPORTS print_callstack(size_t skipLevels, bool makeFunctionNamesStandOut, std::stringstream& ss);
+    std::string SIGNAL_EXPORTS print_callstack(size_t skipLevels, bool makeFunctionNamesStandOut, std::stringstream& ss);
 
-	struct SIGNAL_EXPORTS IExceptionWithCallStackBase
-	{
-		virtual const char * CallStack() const = 0;
-		virtual ~IExceptionWithCallStackBase() throw() {}
-	};
+    struct SIGNAL_EXPORTS IExceptionWithCallStackBase
+    {
+        virtual const char * CallStack() const = 0;
+        virtual ~IExceptionWithCallStackBase() throw() {}
+    };
 
-	// Exception wrapper to include native call stack string
-	template <class E>
-	class ExceptionWithCallStack : public E, public IExceptionWithCallStackBase
-	{
-	public:
-		ExceptionWithCallStack(const std::string& msg, const std::string& callstack) :
-			E(msg), m_callStack(callstack)
-		{ }
-		ExceptionWithCallStack(const E& exc, const std::string& callstack) :
-			E(exc), m_callStack(callstack)
-		{ }
+    // Exception wrapper to include native call stack string
+    template <class E>
+    class ExceptionWithCallStack : public E, public IExceptionWithCallStackBase
+    {
+    public:
+        ExceptionWithCallStack(const std::string& msg, const std::string& callstack) :
+            E(msg), m_callStack(callstack)
+        { }
+        ExceptionWithCallStack(const E& exc, const std::string& callstack) :
+            E(exc), m_callStack(callstack)
+        { }
         
-		virtual const char * CallStack() const override { return m_callStack.c_str(); }
+        virtual const char * CallStack() const override { return m_callStack.c_str(); }
 
-	protected:
-		std::string m_callStack;
-	};
+    protected:
+        std::string m_callStack;
+    };
     template<> class ExceptionWithCallStack<std::string>: public std::string, public IExceptionWithCallStackBase
     {
-     	public:
-		ExceptionWithCallStack(const std::string& msg, const std::string& callstack) :
-			std::string(msg), m_callStack(callstack)
-		{ }
+         public:
+        ExceptionWithCallStack(const std::string& msg, const std::string& callstack) :
+            std::string(msg), m_callStack(callstack)
+        { }
         
-		virtual const char * CallStack() const override { return m_callStack.c_str(); }
+        virtual const char * CallStack() const override { return m_callStack.c_str(); }
 
-	protected:
-		std::string m_callStack;
+    protected:
+        std::string m_callStack;
     };
 }

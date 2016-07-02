@@ -80,10 +80,10 @@ namespace Signals
     {
         size_t destination_thread;
         QueuedChannel(size_t dest) : destination_thread(dest) {}
-		~QueuedChannel()
-		{
-			thread_specific_queue::remove_from_queue(this);
-		}
+        ~QueuedChannel()
+        {
+            thread_specific_queue::remove_from_queue(this);
+        }
         virtual std::future<void> exec(const std::function<void(T...)>& f, T... args)
         {
             std::shared_ptr<executor<void,T...>> exec(new executor<void, T...>());
