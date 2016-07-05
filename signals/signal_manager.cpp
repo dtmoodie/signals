@@ -114,6 +114,38 @@ std::shared_ptr<signal_base>& signal_manager::get_signal(const std::string& name
 {
     return _signals[type][name];
 }
+
+signal_base* signal_manager::get_signal_optional(const std::string& name, const Loki::TypeInfo& type)
+{
+    auto itr = _signals.find(type);
+    if(itr != _signals.end())
+    {
+        auto itr2 = itr->second.find(name);
+        if(itr2 != itr->second.end())
+        {
+            return itr2->second.get();
+        }
+    }
+    return nullptr;
+}
+
+signal_base* signal_manager::get_signal_optional(const std::string& name, const std::string& type)
+{
+    for(auto& signature : _signals)
+    {
+        std::string type_name = signature.first.name();
+        if(type == signature.first.name())
+        {
+            auto itr2 = signature.second.find(name);
+            if(itr2 != signature.second.end())
+            {
+                return itr2->second.get();
+            }
+        }
+    }
+    return nullptr;
+}
+
 void signal_manager::register_sender(Loki::TypeInfo signal_signature, std::string signal_name, signaler* sender_ptr)
 {
 	register_sender(signal_signature, signal_name, Loki::TypeInfo(typeid(*sender_ptr)), sender_ptr, sender_ptr->get_description(), sender_ptr->get_signal_description(signal_name));
@@ -216,7 +248,20 @@ std::vector<signal_base*> signal_manager::get_signals()
 
 	return output;
 }
-
+std::vector<std::string> signal_manager::get_signal_names()
+{
+    std::set<std::string> names;
+    for(auto& sig : _signals)
+    {
+        for(auto& sig1 : sig.second)
+        {
+            names.insert(sig1.first);
+        }
+    }
+    std::vector<std::string> output;
+    output.insert(output.end(), names.begin(), names.end());
+    return output;
+}
 void signal_manager::print_signal_map()
 {
 	/*for (auto& type : _signals)

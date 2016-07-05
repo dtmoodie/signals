@@ -174,6 +174,7 @@ namespace Signals
 		virtual std::vector<signal_base*> get_signals(Loki::TypeInfo type);
 		virtual std::vector<signal_base*> get_signals(Loki::TypeInfo type, std::string name);
 		virtual std::vector<signal_base*> get_signals();
+        virtual std::vector<std::string> get_signal_names();
 		virtual void print_signal_map();
         
         
@@ -187,6 +188,11 @@ namespace Signals
         virtual std::vector<sender> get_senders(Loki::TypeInfo type);
         virtual std::vector<sender> get_senders(std::string name);
         virtual std::vector<sender> get_senders();
+
+        
+        virtual signal_base* get_signal_optional(const std::string& name, const Loki::TypeInfo& type);
+        virtual signal_base* get_signal_optional(const std::string& name, const std::string& type);
+
     protected:
         
         virtual std::shared_ptr<signal_base>& get_signal(const std::string& name, Loki::TypeInfo type);

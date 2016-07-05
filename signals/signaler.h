@@ -295,7 +295,7 @@ template<typename DUMMY> struct signal_registerer<N, DUMMY> \
                 return true; \
             } \
         } \
-        return connect_(name, signal, Signals::_counter_<N-1>()); \
+        return connect_(name, signal, dummy--); \
     } \
 	int connect_(std::string name, manager* manager_, Signals::_counter_<N> dummy) \
 	{ \
@@ -333,6 +333,12 @@ template<typename DUMMY> struct signal_registerer<N, DUMMY> \
         } \
 		return disconnect_(manager_, Signals::_counter_<N-1>()) + (disconnect_from_signal(sig) ? 1 : 0); \
 	} \
+    static std::vector<Signals::slot_info> list_slots_(Signals::_counter_<N> dummy) \
+    { \
+        auto slot_infos = list_slots_(Signals::_counter_<N-1>()); \
+        slot_infos.push_back(Signals::slot_info({Loki::TypeInfo(typeid(RETURN(__VA_ARGS__))), #NAME})); \
+        return slot_infos; \
+    }
 
 #define SLOT_1(RETURN, N, NAME) \
     virtual RETURN NAME(); \
@@ -394,6 +400,12 @@ template<typename DUMMY> struct signal_registerer<N, DUMMY> \
         } \
         return disconnect_(manager_, Signals::_counter_<N-1>()) + (disconnect_from_signal(sig) ? 1 : 0); \
 	} \
+    static std::vector<Signals::slot_info> list_slots_(Signals::_counter_<N> dummy) \
+    { \
+        auto slot_infos = list_slots_(Signals::_counter_<N-1>()); \
+        slot_infos.push_back(Signals::slot_info({Loki::TypeInfo(typeid(RETURN(void))), #NAME})); \
+        return slot_infos; \
+    }
 
 #define SLOT_2(RETURN, N, NAME, ...) SLOT__(NAME, N, RETURN, __VA_ARGS__)
 #define SLOT_3(RETURN, N, NAME, ...) SLOT__(NAME, N, RETURN, __VA_ARGS__)
@@ -480,6 +492,14 @@ template<int N> std::string slot_description_by_name_(const std::string& name, S
     LOG_RECURSION(N); \
     return slot_description_by_name_(name, Signals::_counter_<N-1>()); \
 } \
+template<int N> static std::vector<Signals::signal_info> list_signals_(Signals::_counter_<N> dummy) \
+{ \
+    return list_signals_(Signals::_counter_<N-1>()); \
+} \
+template<int N> static std::vector<Signals::slot_info> list_slots_(Signals::_counter_<N> dummy) \
+{ \
+    return list_slots_(Signals::_counter_<N-1>()); \
+} \
 bool connect_(std::string name, Signals::signal_base* signal, Signals::_counter_<N_> dummy) \
 { \
 	LOG_RECURSION(N_); \
@@ -515,6 +535,14 @@ std::string slot_description_by_name_(const std::string& name, Signals::_counter
     LOG_RECURSION(N_); \
     return ""; \
 } \
+static std::vector<Signals::signal_info> list_signals_(Signals::_counter_<N_> dummy) \
+{ \
+    return std::vector<Signals::signal_info>(); \
+} \
+static std::vector<Signals::slot_info> list_slots_(Signals::_counter_<N_> dummy) \
+{ \
+    return std::vector<Signals::slot_info>(); \
+}
 
 #define SIGNALS_BEGIN_2(CLASS_NAME, PARENT, N_) \
 typedef CLASS_NAME THIS_CLASS; \
@@ -581,6 +609,14 @@ template<int N> std::string slot_description_by_name_(const std::string& name, S
     LOG_RECURSION(N); \
     return slot_description_by_name_(name, Signals::_counter_<N-1>()); \
 } \
+template<int N> static std::vector<Signals::signal_info> list_signals_(Signals::_counter_<N> dummy) \
+{ \
+    return list_signals_(Signals::_counter_<N-1>()); \
+} \
+template<int N> static std::vector<Signals::slot_info> list_slots_(Signals::_counter_<N> dummy) \
+{ \
+    return list_slots_(Signals::_counter_<N-1>()); \
+} \
 bool connect_(std::string name, Signals::signal_base* signal, Signals::_counter_<N_> dummy) \
 { \
 	LOG_RECURSION(N_); \
@@ -616,7 +652,14 @@ std::string slot_description_by_name_(const std::string& name, Signals::_counter
     LOG_RECURSION(N_); \
     return ""; \
 } \
-
+static std::vector<Signals::signal_info> list_signals_(Signals::_counter_<N_> dummy) \
+{ \
+    return std::vector<Signals::signal_info>(); \
+} \
+static std::vector<Signals::slot_info> list_slots_(Signals::_counter_<N_> dummy) \
+{ \
+    return std::vector<Signals::slot_info>(); \
+}
 #ifdef _MSC_VER
 #define SIGNALS_BEGIN(...) BOOST_PP_CAT(BOOST_PP_OVERLOAD(SIGNALS_BEGIN_, __VA_ARGS__)(__VA_ARGS__, __COUNTER__), BOOST_PP_EMPTY())
 #else
@@ -725,6 +768,22 @@ std::string get_slot_description(const std::string& name) \
 { \
     return slot_description_by_name_(name, Signals::_counter_<N-1>()); \
 } \
+static std::vector<Signals::signal_info> get_signal_info_static() \
+{ \
+    return list_signals_(Signals::_counter_<N-1>()); \
+} \
+static std::vector<Signals::slot_info> get_slot_info_static() \
+{ \
+    return list_slots_(Signals::_counter_<N-1>()); \
+} \
+std::vector<Signals::signal_info> get_signal_info() \
+{ \
+    return get_signal_info_static(); \
+} \
+std::vector<Signals::slot_info> get_slot_info() \
+{ \
+    return get_slot_info_static(); \
+}
 
 
 #define SIGNALS_END SIGNALS_END_(__COUNTER__)
@@ -771,6 +830,18 @@ std::string slot_description_by_name_(const std::string& name, Signals::_counter
     if(name == #NAME) \
         return DESCRIPTION; \
 } \
+std::vector<slot_info> list_slots_(Signals::_counter_<N> dummy) \
+{ \
+    auto slot_info = list_slots_(Signals::_counter_<N-1>()); \
+    for(auto& info : slot_info) \
+    { \
+        if(info.name == #NAME) \
+        { \
+            info.description = DESCRIPTION; \
+        } \
+    } \
+    return slot_info; \
+}\
 
 #define DESCRIBE_SLOT(NAME, DESCRIPTION) DESCRIBE_SLOT_(NAME, DESCRIPTION, __COUNTER__)
 
@@ -780,6 +851,18 @@ std::string signal_description_by_name_(const std::string& name, Signals::_count
     if(name == #NAME) \
         return DESCRIPTION; \
 } \
+std::vector<slot_info> list_signals_(Signals::_counter_<N> dummy) \
+{ \
+    auto signal_info = list_signals_(Signals::_counter_<N-1>()); \
+    for(auto& info : signal_info) \
+    { \
+        if(info.name == #NAME) \
+        { \
+            info.description = DESCRIPTION; \
+        } \
+    } \
+    return signal_info; \
+}\
 
 #define DESCRIBE_SIGNAL(NAME, DESCRIPTION)
 
@@ -791,7 +874,17 @@ std::string signal_description_by_name_(const std::string& name, Signals::_count
 
 namespace Signals
 {
-	template<int N> class _counter_{};
+    template<int N> struct _counter_
+    {
+        _counter_<N-1> operator--()
+        {
+            return _counter_<N-1>();
+        }
+        _counter_<N+1> operator++()
+        {
+            return _counter_<N+1>();
+        }
+    };
 	class SIGNAL_EXPORTS signaler
 	{
 	public:
@@ -820,6 +913,8 @@ namespace Signals
 		// Disconnects all slots associated with signals of this name
 		virtual int disconnect(std::string name, signal_manager* manager) = 0;
 		virtual int disconnect(std::string name); // overload uses member signal manager
+        virtual std::vector<signal_info> get_signal_info() = 0;
+        virtual std::vector<slot_info> get_slot_info() = 0;
 		
 	protected:
 		manager* _sig_manager;

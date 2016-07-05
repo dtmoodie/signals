@@ -1,5 +1,5 @@
 #pragma once
-
+#include "Defs.h"
 #include "LokiTypeInfo.h"
 #include "thread_registry.h"
 #include "connection.h"
@@ -8,8 +8,20 @@
 namespace Signals
 {
     class signal_sink_base;
+    struct signal_info
+    {
+        Loki::TypeInfo signature;
+        std::string name;
+        std::string description;
+    };
+    struct slot_info
+    {
+        Loki::TypeInfo signature;
+        std::string name;
+        std::string description;
+    };
 
-    class signal_base
+    class SIGNAL_EXPORTS signal_base
     {
     protected:
 		
